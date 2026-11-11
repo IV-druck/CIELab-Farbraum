@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="de"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>CIELab Farbraum 3D</title>
+<style>
+:root{--bg:#f5f6f8;--card:#fff;--tx:#1b1f26;--mu:#5d6675;--ac:#2563eb;--bd:#d9dde5;--ok:#15803d;--no:#b91c1c;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#14171c;--card:#1d222a;--tx:#e8ebf0;--mu:#9aa3b2;--ac:#6ea0ff;--bd:#323946;--ok:#4ade80;--no:#f87171}}
+:root[data-theme="dark"]{--bg:#14171c;--card:#1d222a;--tx:#e8ebf0;--mu:#9aa3b2;--ac:#6ea0ff;--bd:#323946;--ok:#4ade80;--no:#f87171}
+*{box-sizing:border-box}html,body{margin:0}
+body{background:var(--bg);color:var(--tx);font-family:system-ui,-apple-system,"Segoe UI",sans-serif;line-height:1.45}
+header{padding:16px 20px 4px}h1{font-size:1.4rem;margin:0}header p{margin:4px 0 0;color:var(--mu);font-size:.92rem}
+main{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:16px;padding:16px 20px 28px;max-width:1200px;margin:auto}
+@media(max-width:860px){main{grid-template-columns:1fr}}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:14px}
+#view{width:100%;height:420px;border-radius:8px;background:#0e1116;touch-action:none;cursor:grab;overflow:hidden}
+#view canvas{display:block}
+.row{display:grid;grid-template-columns:78px 1fr 70px;align-items:center;gap:8px;margin:8px 0;font-size:.92rem}
+.row input{width:100%}.row b{text-align:right;font-variant-numeric:tabular-nums}
+.sw{display:flex;gap:10px;align-items:center;margin-top:8px}
+.sw div.c{width:64px;height:64px;border-radius:8px;border:1px solid var(--bd)}
+.mu{color:var(--mu);font-size:.85rem}
+h2{font-size:1.05rem;margin:0 0 8px}
+button{font:inherit;background:var(--ac);color:#fff;border:0;border-radius:8px;padding:8px 14px;cursor:pointer;margin:4px 6px 4px 0}
+button.o{background:transparent;color:var(--tx);border:1px solid var(--bd)}
+input[type=number]{font:inherit;padding:7px;width:110px;border-radius:8px;border:1px solid var(--bd);background:var(--bg);color:var(--tx)}
+#fb{margin-top:8px;font-weight:600}.ok{color:var(--ok)}.no{color:var(--no)}
+.legend span{display:inline-block;margin-right:12px}
+html,body{height:100%;overflow:hidden}
+header{position:fixed;top:0;left:0;z-index:5;padding:10px 14px;pointer-events:none;color:#e8ebf0}
+header h1{font-size:1rem}header p{color:#9aa3b2;font-size:.75rem}
+main{display:block;padding:0;max-width:none;margin:0}
+main>section:first-child{border:0;background:none;padding:0}
+#view{position:fixed;inset:0;width:100%;height:100%;border-radius:0}
+#ctl{position:fixed;left:0;right:0;bottom:0;width:auto;max-height:45vh;overflow:auto;display:grid;grid-template-columns:minmax(220px,1fr) 320px 100px 100px;column-gap:20px;background:color-mix(in srgb,var(--card) 90%,transparent);border:0;border-top:1px solid var(--bd);border-radius:0;padding:6px 14px calc(8px + env(safe-area-inset-bottom,0px));backdrop-filter:blur(6px);z-index:8;transform:translateY(100%);transition:transform .25s ease}
+#ctl.show{transform:none}
+#ctl>:nth-child(1){grid-column:1;grid-row:1}
+#ctl>:nth-child(2){grid-column:2;grid-row:1;justify-self:end}
+#ctl>:nth-child(3){grid-column:1;grid-row:2}
+#ctl>:nth-child(4){grid-column:1;grid-row:3}
+#ctl>:nth-child(5){grid-column:1;grid-row:4}
+#ctl>:nth-child(6){grid-column:1;grid-row:5}
+#ctl>:nth-child(7){grid-column:2;grid-row:2/6}
+#ctl>:nth-child(8){grid-column:3;grid-row:2}
+#ctl>:nth-child(9){grid-column:3;grid-row:3}
+#ctl>:nth-child(10){grid-column:3;grid-row:4}
+#ctl>:nth-child(11){grid-column:4;grid-row:2}
+#ctl>:nth-child(12){grid-column:4;grid-row:3}
+#ctl>:nth-child(13){grid-column:4;grid-row:4}
+#ctl>:nth-child(14){grid-column:4;grid-row:5}
+#ctl>:nth-child(11).rgb{margin-top:6px}
+#ctl .row.rgb{grid-template-columns:18px 70px;margin-top:15px}
+#ctl .row.rgb input[type=range]{display:none}
+#ctl>:nth-child(8).rgb{margin-top:6px}
+#ctl .legend{margin:2px 0;font-size:.78rem}
+#ctl button{padding:5px 10px;margin:2px 6px 2px 0;font-size:.85rem}
+#ctl .row{margin:6px 0 0}
+#ctl .row:has(.zs){margin-top:15px}
+#ctl .sw{margin:6px 0 0;position:relative;min-height:80px;align-items:stretch}#ctl .sw div.c{flex:1;width:auto;height:auto;border-radius:8px}
+#ctl #info{position:absolute;left:6px;bottom:6px;background:rgba(0,0,0,.6);color:#fff;padding:3px 7px;border-radius:6px;font-size:.78rem;max-width:calc(100% - 12px)}
+.zs{position:relative}
+.zs::before{content:'';position:absolute;left:50%;top:-5px;bottom:-5px;width:2px;margin-left:-1px;background:var(--tx);opacity:.7;pointer-events:none}
+.zs::after{content:'0';position:absolute;left:50%;top:-17px;transform:translateX(-50%);font-size:.7rem;color:var(--mu);pointer-events:none}
+#exb{position:fixed;bottom:30px;right:12px;width:176px;z-index:7;margin:0}
+#exb.open{top:auto;bottom:30px}
+#exfoot{display:none;position:fixed;right:0;bottom:0;width:clamp(340px,33.33vw,640px);max-width:100%;height:80px;background:var(--card);border-top:1px solid var(--bd);z-index:6}
+body.exopen #exfoot{display:block}
+body.exopen main>section:nth-child(2){bottom:80px}
+#lvs button{padding:5px 10px;font-size:.88rem;margin:2px 4px 2px 0}
+main>section:nth-child(2) h2{margin:0 150px 8px 0}
+#logo{position:fixed;top:22px;right:28px;z-index:20;width:102px;pointer-events:none}
+#logo svg{display:block;width:100%;height:auto}
+#logo svg path{fill:var(--lc,#0b6e97);transition:fill .15s}
+.row input.nv{width:100%;padding:3px 4px;text-align:right;-moz-appearance:textfield;font-variant-numeric:tabular-nums}
+.nv::-webkit-inner-spin-button,.nv::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
+main>section:nth-child(2){display:none;position:fixed;right:0;top:0;bottom:0;width:clamp(340px,33.33vw,640px);max-width:100%;padding-top:24px;padding-bottom:16px;border-radius:0;border-width:0 0 0 1px;overflow:auto;z-index:6;font-size:1.02rem}
+main>section:nth-child(2).open{display:block}
+select{font:inherit;padding:4px 6px;border-radius:8px;border:1px solid var(--bd);background:var(--bg);color:var(--tx);margin-right:6px}
+#vol{position:fixed;top:64px;left:230px;z-index:6;display:none;max-width:min(420px,calc(100% - 24px));max-height:calc(100% - 300px);overflow:auto;font-size:.85rem}
+#vol.show{display:block}
+#side{position:fixed;left:10px;top:64px;z-index:6;width:210px;display:flex;flex-direction:column;gap:10px;background:color-mix(in srgb,var(--card) 88%,transparent);border:1px solid var(--bd);border-radius:12px;padding:10px;backdrop-filter:blur(6px)}
+#side .sl{font-weight:600;display:block;margin-bottom:4px}
+#side select{width:100%;margin:0}
+#side .tg{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:.9rem}
+#side button{margin:0;width:100%}
+.sw2{position:relative;display:inline-block;width:46px;height:28px;flex:none}
+.sw2 input{opacity:0;width:0;height:0;position:absolute}
+.sw2 .knob{position:absolute;inset:0;background:#c7ccd6;border-radius:28px;transition:.2s;cursor:pointer}
+.sw2 .knob::before{content:'';position:absolute;width:24px;height:24px;left:2px;top:2px;background:#fff;border-radius:50%;box-shadow:0 1px 3px rgba(0,0,0,.35);transition:.2s}
+.sw2 input:checked+.knob{background:#34c759}
+.sw2 input:checked+.knob::before{transform:translateX(18px)}
+.sw2 input:focus-visible+.knob{outline:2px solid var(--ac)}
+#hot{position:fixed;left:0;right:0;bottom:0;height:14px;z-index:9}
+#grip{position:fixed;left:50%;bottom:0;transform:translateX(-50%);z-index:9;margin:0;border-radius:10px 10px 0 0;padding:3px 18px;font-size:.8rem;background:var(--card);color:var(--tx);border:1px solid var(--bd);border-bottom:0}
+.chip{display:inline-block;padding:8px 14px;margin:4px;border:1px solid var(--bd);border-radius:999px;background:var(--bg);cursor:grab;user-select:none;font-size:1rem}
+.chip.sel{outline:2px solid var(--ac)}
+.slot{display:flex;align-items:center;gap:8px;margin:8px 0;font-size:1rem}
+.slot>span{flex:1}
+.drop{min-height:46px;flex:1;border:2px dashed var(--bd);border-radius:10px;padding:2px;display:flex;align-items:center}
+.pool{margin-top:8px;min-height:38px}
+select.gap{font:inherit;font-size:1rem;padding:6px 10px;min-width:130px;margin:2px 4px;border-radius:8px;border:1px solid var(--bd);background:var(--bg);color:var(--tx)}
+#q{font-size:1.05rem;line-height:1.5;margin-bottom:12px}
+#cd{font:inherit;font-size:1.3rem;text-align:right;width:100%;max-width:300px;box-sizing:border-box;padding:8px 10px;margin-top:8px;border:1px solid var(--bd);border-radius:8px;background:var(--bg);color:var(--tx)}
+.cg{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;max-width:300px;margin-top:8px}
+.cg button{margin:0;padding:10px 0;font-size:1.05rem}
+#theory{border:1px solid var(--bd);border-radius:10px;padding:8px 12px;margin:8px 0;background:var(--bg)}
+#theory summary{cursor:pointer;font-weight:600}
+#theory h3{font-size:.95rem;margin:10px 0 4px}
+#theory p,#theory li{font-size:.9rem;margin:4px 0}
+#theory table{border-collapse:collapse;font-size:.88rem;margin:6px 0}
+#theory td,#theory th{border:1px solid var(--bd);padding:3px 8px;text-align:left}
+#in button[data-o],#in button[data-i]{display:block;width:100%;text-align:left;padding:10px 14px;font-size:1rem;margin:5px 0}
+#in button#ordr{width:auto;text-align:center;font-size:.9rem;padding:6px 12px}
+#in button.o{margin:2px 6px 2px 0}
+
+@media(max-width:900px){
+#ctl{grid-template-columns:1fr 84px 84px;column-gap:12px;padding:4px 10px calc(6px + env(safe-area-inset-bottom,0px));max-height:50vh}
+#ctl>:nth-child(1){grid-column:1/-1;grid-row:1}
+#ctl>:nth-child(2){grid-column:1/-1;grid-row:2;justify-self:start}
+#ctl>:nth-child(3){grid-column:1/-1;grid-row:3}
+#ctl>:nth-child(4){grid-column:1/-1;grid-row:4}
+#ctl>:nth-child(5){grid-column:1/-1;grid-row:5}
+#ctl>:nth-child(6){grid-column:1/-1;grid-row:6}
+#ctl>:nth-child(7){grid-column:1;grid-row:7/11;min-height:96px}
+#ctl>:nth-child(8){grid-column:2;grid-row:7}
+#ctl>:nth-child(9){grid-column:2;grid-row:8}
+#ctl>:nth-child(10){grid-column:2;grid-row:9}
+#ctl>:nth-child(11){grid-column:3;grid-row:7}
+#ctl>:nth-child(12){grid-column:3;grid-row:8}
+#ctl>:nth-child(13){grid-column:3;grid-row:9}
+#ctl>:nth-child(14){grid-column:3;grid-row:10}
+#ctl .row{grid-template-columns:74px 1fr 56px;gap:6px;font-size:.85rem;white-space:nowrap}
+#ctl .row.rgb{grid-template-columns:18px 1fr;margin-top:6px}
+#ctl .legend{display:none}
+#ctl #info{font-size:.7rem}
+header p{display:none}
+main>section:nth-child(2){width:100%}
+#exfoot{width:100%}
+#side{width:170px;top:48px;padding:8px;font-size:.85rem}
+#vol{left:12px;top:auto;bottom:56px;max-height:40vh}
+}
+</style></head><body>
+<header><h1 id="ttl">CIELab Farbraum in 3D: sRGB Farbumfang</h1><p>Drehen mit Maus oder Finger, Zoom mit Mausrad. Punkte: sRGB. Farbige Fläche: CMYK (FOGRA39, Näherung). Graue Hülle: sichtbarer Bereich (Spektralfarbenzug), begrenzt auf a* und b* von -128 bis +127.</p></header>
+<div id="logo"><svg viewBox="0 0 164.646 114.968" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="IV Logo"><path fill="#0b6e97" d="M 131.414062 4.292969 C 137.039062 3.894531 152.167969 4.863281 156.988281 7.265625 C 160.503906 9.023438 161.988281 13.484375 160.183594 17.097656 C 157.886719 21.691406 147.273438 17.363281 143.234375 17.027344 C 117.578125 14.898438 94.558594 24.28125 84.007812 48.691406 L 62.75 107.261719 C 58.648438 111.640625 53.472656 110.742188 51.105469 105.164062 C 43.144531 86.382812 38.054688 65.265625 30.117188 46.324219 C 29.644531 42.679688 29.191406 40.183594 32.570312 38.167969 C 37.6875 35.117188 40.46875 38.429688 42.429688 42.992188 C 46.929688 53.445312 49.863281 65.578125 54.058594 76.269531 C 54.867188 77.851562 56.375 79.476562 58.339844 78.910156 C 60.804688 78.199219 71.09375 46.523438 73.644531 41.320312 C 85.230469 17.707031 105.640625 6.136719 131.414062 4.292969"/><path fill="#0b6e97" d="M 12.617188 37.160156 C 15.359375 36.542969 19.582031 38.601562 19.984375 41.492188 L 19.984375 105.40625 C 17.789062 111.644531 10.105469 111.582031 7.953125 105.40625 L 7.972656 42.507812 C 8.449219 40.003906 10.054688 37.738281 12.617188 37.160156"/><path fill="#0b6e97" d="M 21.042969 23.058594 C 21.042969 26.964844 17.875 30.128906 13.96875 30.128906 C 10.066406 30.128906 6.898438 26.964844 6.898438 23.058594 C 6.898438 19.152344 10.066406 15.984375 13.96875 15.984375 C 17.875 15.984375 21.042969 19.152344 21.042969 23.058594"/></svg></div>
+<div id="exfoot"></div>
+<button id="exb">Übungen öffnen</button>
+<div id="hot"></div><button id="grip">▲ Regler</button>
+<div id="side">
+<div><span class="sl">Farbraum:</span><select id="mode"><option value="srgb">sRGB</option><option value="cmyk">CMYK</option><option value="both" selected>Beide</option></select></div>
+<div class="tg"><span>Sichtbarer Bereich (Lab)</span><label class="sw2"><input type="checkbox" id="visb" checked><span class="knob"></span></label></div>
+<div class="tg"><span>Beschriftung RGB</span><label class="sw2"><input type="checkbox" id="lrgb" checked><span class="knob"></span></label></div>
+<div class="tg"><span>Beschriftung CMYK</span><label class="sw2"><input type="checkbox" id="lcmyk" checked><span class="knob"></span></label></div>
+<div class="tg"><span>Verschieben</span><label class="sw2"><input type="checkbox" id="pm"><span class="knob"></span></label></div>
+<div class="tg"><span>Ansicht zurücksetzen</span><label class="sw2"><input type="checkbox" id="rv"><span class="knob"></span></label></div>
+<button class="o" id="volb">Volumen berechnen</button>
+</div>
+<div id="vol" class="card"></div>
+<main>
+<section class="card">
+<div id="view"></div>
+<div id="ctl">
+<p class="mu legend"><span>Hoch: L* (0 schwarz bis 100 weiß)</span><span>Achsen hier: a* und b* von -120 bis +120 (theoretisch unbegrenzt)</span><span id="gam"></span><span style="color:#e0453f">+a* rot</span><span style="color:#2fa84f">−a* grün</span><span style="color:#d9a800">+b* gelb</span><span style="color:#3b6fe0">−b* blau</span></p>
+<div style="display:none"></div>
+<div class="row"><span>L*</span><input id="L" type="range" min="0" max="100" value="60"><input type="number" class="nv" id="Lv" min="0" max="100" step="1"></div>
+<div class="row"><span>a*</span><div class="zs"><input id="a" type="range" min="-120" max="120" value="40"></div><input type="number" class="nv" id="av" min="-120" max="120" step="1"></div>
+<div class="row"><span>b*</span><div class="zs"><input id="b" type="range" min="-120" max="120" value="30"></div><input type="number" class="nv" id="bv" min="-120" max="120" step="1"></div>
+<div class="row"><span>Schnitt L*</span><input id="cut" type="range" min="0" max="100" value="100"><input type="number" class="nv" id="cv" min="0" max="100" step="1"></div>
+<div class="sw"><div class="c" id="sw"></div><div id="info" class="mu"></div></div>
+<div class="row rgb"><span style="color:#e11">R</span><input id="Rs" type="range" min="0" max="255" value="0"><input type="number" class="nv" id="Rv" min="0" max="255" step="1"></div>
+<div class="row rgb"><span style="color:#0a0">G</span><input id="Gs" type="range" min="0" max="255" value="0"><input type="number" class="nv" id="Gv" min="0" max="255" step="1"></div>
+<div class="row rgb"><span style="color:#22f">B</span><input id="Bs" type="range" min="0" max="255" value="0"><input type="number" class="nv" id="Bv" min="0" max="255" step="1"></div>
+<div class="row rgb"><span style="color:#0aa">C</span><input type="number" class="nv" id="cC" min="0" max="100" step="1"></div>
+<div class="row rgb"><span style="color:#d0a">M</span><input type="number" class="nv" id="cM" min="0" max="100" step="1"></div>
+<div class="row rgb"><span style="color:#c90">Y</span><input type="number" class="nv" id="cY" min="0" max="100" step="1"></div>
+<div class="row rgb"><span style="color:#888">K</span><input type="number" class="nv" id="cK" min="0" max="100" step="1"></div>
+</div>
+</section>
+<section class="card">
+<h2>Übungsaufgaben</h2><div id="lvs" style="margin:0 150px 38px 0"></div>
+
+<div id="q"></div><div id="in"></div><div id="fb"></div>
+<div><button id="chk">Prüfen</button><button id="nx" class="o">Weiter</button><button id="rs" class="o">Neu starten</button></div>
+<p class="mu" id="sc"></p>
+<details id="theory"><summary>Theorie: ΔE76 und ΔE00</summary><div>
+<h3>1. Grundlagen</h3><p>Ein Spektralfotometer misst Spektralwerte, daraus wird der Lab Wert berechnet. L* ist die Helligkeit (0 Schwarz bis 100 Weiß), a* geht von Grün (-) nach Rot (+), b* von Blau (-) nach Gelb (+). Eine Farbabweichung entsteht, wenn Soll und Ist verschieden sind.</p>
+<h3>2. Differenzen</h3><p>ΔL* = L*Ist - L*Soll, ebenso Δa* und Δb*. ΔL* größer 0: heller, kleiner 0: dunkler. Δa* größer 0: Richtung Rot, kleiner 0: Grün. Δb* größer 0: Richtung Gelb, kleiner 0: Blau.</p>
+<h3>3. ΔE76</h3><p>ΔE76 = √(ΔL*² + Δa*² + Δb*²). Das ist der geometrische Abstand im Lab Raum, alle Richtungen zählen gleich.</p>
+<h3>4. Warum ΔE00?</h3><p>Lab ist nicht ganz gleichmäßig: gleiche Abstände sehen je nach Farbbereich verschieden groß aus. ΔE00 (CIEDE2000) zerlegt den Unterschied in Helligkeit (ΔL′), Buntheit (ΔC′) und Farbton (ΔH′), gewichtet jeden Teil mit einem Faktor (SL, SC, SH) und ergänzt einen Term für den Blau Bereich (RT). ΔE94 war eine Vorstufe: Es gewichtet Buntheit und Farbton, aber nicht die Helligkeit und hat keine Blau Korrektur.</p>
+<h3>5. Wirkung</h3><ul><li>Bunte Farben: gleicher Abstand zählt weniger</li><li>Nahe Grau: gleicher Abstand zählt mehr</li><li>Sehr dunkle und sehr helle Töne: Helligkeitsabstände zählen weniger</li><li>Blau Bereich: RT gleicht die Ungleichmäßigkeit von Lab aus</li></ul>
+<p>Beispiel mit Δ(1, 1, 1) und ΔE76 = 1,73: Neutralgrau (50, 0, 0) ergibt ΔE00 = 2,00, gesättigtes Rot (50, 70, 30) ergibt ΔE00 = 1,07.</p>
+<h3>6. Richtwerte</h3>
+<table><tr><th>ΔE76</th><th>Beurteilung</th></tr><tr><td>unter 1</td><td>nicht wahrnehmbar</td></tr><tr><td>1 bis 3</td><td>gering</td></tr><tr><td>3 bis 6</td><td>deutlich</td></tr><tr><td>über 6</td><td>stark</td></tr></table>
+<table><tr><th>ΔE00</th><th>Beurteilung</th></tr><tr><td>0 bis 1</td><td>nicht erkennbar</td></tr><tr><td>1 bis 2</td><td>sehr kleine Abweichung</td></tr><tr><td>2 bis 3</td><td>klare Abweichung, meist tolerierbar</td></tr><tr><td>über 3</td><td>deutlich sichtbar, Korrektur nötig</td></tr></table>
+<p class="mu">Faustregeln, je nach Norm und Anwendung verschieden. Werte von ΔE76 und ΔE00 nicht vermischen.</p>
+<p><b>Merksatz:</b> ΔE76 ist der geometrische Abstand im Lab Raum. ΔE00 ist ein Abstand, der mit Seh Experimenten an die Wahrnehmung angepasst wurde.</p>
+</div></details>
+<p class="mu" style="font-size:.78rem;margin:2px 0"><a href="#" id="unl">Alle Level freischalten (Lehrkraft)</a> | <a href="#" id="rst">Fortschritt zurücksetzen</a></p>
+</section>
+</main>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+if(typeof THREE==='undefined'){document.body.innerHTML='<div style="padding:24px;font:16px system-ui,sans-serif;color:#e8ebf0;background:#14171c;min-height:100vh"><h2>3D Ansicht nicht verfügbar</h2><p>Die 3D Bibliothek konnte nicht geladen werden. Bitte öffne die Seite über den Link direkt im Browser (z. B. Safari) mit Internetverbindung, nicht als gespeicherte Datei in der Dateivorschau.</p></div>';throw new Error('THREE fehlt');}
+const $=id=>document.getElementById(id);
+const W=[0.95047,1,1.08883];
+function lab2rgb(L,a,b){const fy=(L+16)/116,fx=fy+a/500,fz=fy-b/200;
+ const f=t=>t*t*t>0.008856?t*t*t:(t-16/116)/7.787;
+ const X=W[0]*f(fx),Y=f(fy),Z=W[2]*f(fz);
+ const r=3.2406*X-1.5372*Y-0.4986*Z,g=-0.9689*X+1.8758*Y+0.0415*Z,bl=0.0557*X-0.2040*Y+1.0570*Z;
+ const gm=c=>c<=0.0031308?12.92*c:1.055*Math.pow(c,1/2.4)-0.055;
+ const v=[gm(r),gm(g),gm(bl)];const out=v.some(c=>c<-0.002||c>1.002);
+ return{rgb:v.map(c=>Math.max(0,Math.min(1,c))),out};}
+function rgb2lab(r,g,b){const lin=c=>c<=0.04045?c/12.92:Math.pow((c+0.055)/1.055,2.4);
+ const R=lin(r),G=lin(g),B=lin(b);
+ const X=(0.4124*R+0.3576*G+0.1805*B)/W[0],Y=0.2126*R+0.7152*G+0.0722*B,Z=(0.0193*R+0.1192*G+0.9505*B)/W[2];
+ const f=t=>t>0.008856?Math.cbrt(t):7.787*t+16/116;
+ return[116*f(Y)-16,500*(f(X)-f(Y)),200*(f(Y)-f(Z))];}
+const css=c=>'rgb('+c.map(v=>Math.round(v*255)).join(',')+')';
+const P=(L,a,b)=>[a/60,(L-50)/60,-b/60];
+
+// 3D
+const box=$('view');
+const scene=new THREE.Scene(),cam=new THREE.PerspectiveCamera(45,1,0.1,50);cam.position.set(0,0,5.6);
+const ren=new THREE.WebGLRenderer({antialias:true});ren.localClippingEnabled=true;const cutPlane=new THREE.Plane(new THREE.Vector3(0,-1,0),0),CP=[cutPlane];box.appendChild(ren.domElement);
+const grp=new THREE.Group();scene.add(grp);grp.position.y=0;grp.rotation.set(0.35,-0.6,0);
+const pts=[];const N=16;
+for(let i=0;i<=N;i++)for(let j=0;j<=N;j++)for(let k=0;k<=N;k++){
+ if(i>0&&i<N&&j>0&&j<N&&k>0&&k<N)continue;
+ const c=[i/N,j/N,k/N],l=rgb2lab(...c);pts.push({c,l});}
+pts.sort((p,q)=>p.l[0]-q.l[0]);
+const pos=new Float32Array(pts.length*3),col=new Float32Array(pts.length*3);
+pts.forEach((p,i)=>{pos.set(P(...p.l),i*3);col.set(p.c,i*3);});
+const geo=new THREE.BufferGeometry();
+geo.setAttribute('position',new THREE.BufferAttribute(pos,3));geo.setAttribute('color',new THREE.BufferAttribute(col,3));
+const sPts=new THREE.Points(geo,new THREE.PointsMaterial({size:0.05,vertexColors:true,clippingPlanes:CP}));grp.add(sPts);
+function axis(p1,p2,c1,c2){const g=new THREE.BufferGeometry();
+ g.setAttribute('position',new THREE.Float32BufferAttribute([...p1,...p2],3));
+ g.setAttribute('color',new THREE.Float32BufferAttribute([...c1,...c2],3));
+ grp.add(new THREE.Line(g,new THREE.LineBasicMaterial({vertexColors:true})));}
+axis(P(0,0,0),P(100,0,0),[0.35,0.35,0.35],[1,1,1]);
+axis(P(50,-120,0),P(50,120,0),[0,0.85,0],[1,0,0]);
+axis(P(50,0,-120),P(50,0,120),[0.1,0.25,1],[1,0.9,0]);
+function lbl(t,p,color,s,bold,bg){const c=document.createElement('canvas');c.width=320;c.height=64;const x=c.getContext('2d');x.font=(bold?'bold 38px':'44px')+' system-ui,sans-serif';x.textAlign='center';x.textBaseline='middle';if(bg){const w=x.measureText(t).width+28;x.fillStyle=bg;x.fillRect(160-w/2,8,w,48);}x.fillStyle=color;x.fillText(t,160,32);
+ const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(c),depthTest:false,transparent:true}));sp.position.set(p[0],p[1],p[2]);sp.scale.set(s*5,s,1);sp.renderOrder=10;grp.add(sp);}
+const tk=[];const tick=(p,d)=>tk.push(p[0],p[1],p[2],p[0]+d[0],p[1]+d[1],p[2]+d[2]);
+const sg=v=>v>0?'+'+v:''+v;
+for(let v=-120;v<=120;v+=10){if(!v)continue;
+ tick(P(50,v,0),[0,0.04,0]);tick(P(50,0,v),[0,0.04,0]);
+ let q=P(50,v,0);lbl(sg(v),[q[0],q[1]-0.07,q[2]],'#8d96a6',0.065);q=P(50,0,v);lbl(sg(v),[q[0],q[1]-0.07,q[2]],'#8d96a6',0.065);}
+for(let v=0;v<=100;v+=10){const q=P(v,0,0);tick(q,[0.04,0,0]);lbl(''+v,[q[0]+0.1,q[1],q[2]],'#8d96a6',0.065);}
+const tg=new THREE.BufferGeometry();tg.setAttribute('position',new THREE.Float32BufferAttribute(tk,3));
+grp.add(new THREE.LineSegments(tg,new THREE.LineBasicMaterial({color:0x8d96a6})));
+lbl('+a* Rot',P(50,148,0),'#fff',0.16,true,'#ff0000');lbl('-a* Grün',P(50,-148,0),'#000',0.16,true,'#00ff00');
+lbl('+b* Gelb',P(50,0,148),'#000',0.16,true,'#ffff00');lbl('-b* Blau',P(50,0,-148),'#fff',0.16,true,'#0000ff');
+lbl('L* 100 Weiß',P(112,0,0),'#ffffff',0.16,true);lbl('L* 0 Schwarz',P(-12,0,0),'#aab2c0',0.16,true);
+const ex=[1,2].map(i=>[Math.round(Math.min(...pts.map(p=>p.l[i]))),Math.round(Math.max(...pts.map(p=>p.l[i])))]);
+$('gam').textContent='sRGB Umfang: a* '+ex[0][0]+' bis +'+ex[0][1]+', b* '+ex[1][0]+' bis +'+ex[1][1];
+const mk=new THREE.Mesh(new THREE.SphereGeometry(0.035,24,16),new THREE.MeshBasicMaterial());
+const ring=new THREE.Mesh(new THREE.SphereGeometry(0.0475,24,16),new THREE.MeshBasicMaterial({color:0xffffff,wireframe:true}));
+grp.add(mk,ring);
+const LOC=[[.1741,.0050],[.1738,.0049],[.1733,.0048],[.1726,.0048],[.1714,.0051],[.1689,.0069],[.1644,.0109],[.1566,.0177],[.1440,.0297],[.1241,.0578],[.0913,.1327],[.0454,.2950],[.0082,.5384],[.0139,.7502],[.0743,.8338],[.1547,.8059],[.2296,.7543],[.3016,.6923],[.3731,.6245],[.4441,.5547],[.5125,.4866],[.5752,.4242],[.6270,.3725],[.6658,.3340],[.6915,.3083],[.7079,.2920],[.7190,.2809],[.7260,.2740],[.7300,.2700],[.7320,.2680],[.7334,.2666],[.7344,.2656],[.7347,.2653]];
+const RG=LOC.slice(),LE=LOC[LOC.length-1];for(let i=1;i<10;i++){const t=i/10;RG.push([LE[0]+(LOC[0][0]-LE[0])*t,LE[1]+(LOC[0][1]-LE[1])*t]);}
+const NR=RG.length,K=24,vp=[],ix=[],lp=[];
+const flab=t=>t>0.008856?Math.cbrt(t):7.787*t+16/116;
+for(let k=0;k<=K;k++){const L=100*k/K,Y=L>8?Math.pow((L+16)/116,3):L/903.3;
+ for(let j=0;j<NR;j++){const[x,y]=RG[j],X=x/y*Y,Z=(1-x-y)/y*Y,fx=flab(X/W[0]),fy=flab(Y),fz=flab(Z/W[2]);
+  vp.push(...P(L,Math.max(-128,Math.min(127,500*(fx-fy))),Math.max(-128,Math.min(127,200*(fy-fz)))));}}
+for(let k=0;k<K;k++)for(let j=0;j<NR;j++){const j2=(j+1)%NR,a=k*NR+j,b=k*NR+j2,c=(k+1)*NR+j,d=(k+1)*NR+j2;ix.push(a,b,c,b,d,c);}
+for(let k=4;k<=K;k+=4)for(let j=0;j<NR;j++){const a=(k*NR+j)*3,b=(k*NR+(j+1)%NR)*3;lp.push(vp[a],vp[a+1],vp[a+2],vp[b],vp[b+1],vp[b+2]);}
+for(let j=0;j<NR;j+=2)for(let k=0;k<K;k++){const a=(k*NR+j)*3,b=((k+1)*NR+j)*3;lp.push(vp[a],vp[a+1],vp[a+2],vp[b],vp[b+1],vp[b+2]);}
+const ctr=(K+1)*NR;vp.push(...P(100,0,0));for(let j=0;j<NR;j++)ix.push(K*NR+j,K*NR+(j+1)%NR,ctr);
+const hg=new THREE.BufferGeometry();hg.setAttribute('position',new THREE.Float32BufferAttribute(vp,3));hg.setIndex(ix);
+const lg=new THREE.BufferGeometry();lg.setAttribute('position',new THREE.Float32BufferAttribute(lp,3));
+const hull=new THREE.Group();
+hull.add(new THREE.Mesh(hg,new THREE.MeshBasicMaterial({color:0x8d96a6,transparent:true,opacity:0.13,side:THREE.DoubleSide,depthWrite:false,clippingPlanes:CP})));
+hull.add(new THREE.LineSegments(lg,new THREE.LineBasicMaterial({color:0x8d96a6,transparent:true,opacity:0.3,clippingPlanes:CP})));
+grp.add(hull);$('visb').onchange=()=>{hull.visible=$('visb').checked;};
+const srgbText=$('gam').textContent;
+const WD=[0.9642,1,0.8249];
+function l2x(L,a,b){const fy=(L+16)/116,fx=fy+a/500,fz=fy-b/200,f=t=>t*t*t>0.008856?t*t*t:(t-16/116)/7.787;return[WD[0]*f(fx),f(fy),WD[2]*f(fz)];}
+function x2l(X,Y,Z){const f=t=>t>0.008856?Math.cbrt(t):7.787*t+16/116,fx=f(X/WD[0]),fy=f(Y),fz=f(Z/WD[2]);return[116*fy-16,500*(fx-fy),200*(fy-fz)];}
+const PR=[[95,0,-2],[55,-37,-50],[48,74,-3],[24,22,-46],[89,-5,93],[50,-65,27],[47,68,48],[22,0,0]].map(p=>l2x(...p).map(Math.sqrt));
+const tvi=v=>v+0.3*v*(1-v);
+function cmy2lab(c,m,y){const C=tvi(c),M=tvi(m),Y=tvi(y),s=[0,0,0];
+ for(let i=0;i<8;i++){const w=(i&1?C:1-C)*(i&2?M:1-M)*(i&4?Y:1-Y);for(let k=0;k<3;k++)s[k]+=w*PR[i][k];}
+ return x2l(s[0]*s[0],s[1]*s[1],s[2]*s[2]);}
+const cmyk=new THREE.Group();grp.add(cmyk);const cmykL=new THREE.Group();cmyk.add(cmykL);
+const srgbL=new THREE.Group();
+[['Rot',[1,0,0]],['Grün',[0,1,0]],['Blau',[0,0,1]],['Cyan',[0,1,1]],['Magenta',[1,0,1]],['Yellow',[1,1,0]]].forEach(([t,c])=>{
+ const l=rgb2lab(c[0],c[1],c[2]),p=P(l[0],l[1],l[2]);
+ lbl(t,[p[0],p[1]-0.12,p[2]],(0.3*c[0]+0.6*c[1]+0.1*c[2])>0.55?'#000':'#fff',0.1,true,css(c));
+ srgbL.add(grp.children[grp.children.length-1]);});
+grp.add(srgbL);
+const P16=PR.concat((()=>{const FL=WD.map(v=>0.0088*v),XK=l2x(16,0,0),XW=l2x(95,0,-2);return PR.map(p=>p.map((s,k)=>Math.sqrt(Math.max(1e-6,FL[k]+(s*s-FL[k])*(XK[k]-FL[k])/(XW[k]-FL[k])))));})());
+function cmyk2lab(c,m,y,k){const C=tvi(c),M=tvi(m),Y=tvi(y),K=tvi(k),s=[0,0,0];
+ for(let i=0;i<16;i++){const w=(i&1?C:1-C)*(i&2?M:1-M)*(i&4?Y:1-Y)*(i&8?K:1-K);for(let q=0;q<3;q++)s[q]+=w*P16[i][q];}
+ return x2l(s[0]*s[0],s[1]*s[1],s[2]*s[2]);}
+const EC=[[250,250,250],[0,159,227],[230,0,126],[49,39,131],[255,237,0],[0,150,64],[227,6,19],[52,48,46]];
+function cmykRGB(c,m,y,k){const C=tvi(c),M=tvi(m),Y=tvi(y),K=tvi(k),s=[0,0,0];
+ for(let i=0;i<16;i++){const w=(i&1?C:1-C)*(i&2?M:1-M)*(i&4?Y:1-Y)*(i&8?K:1-K),e=EC[i&7],f=i&8?0.1:1;for(let q=0;q<3;q++)s[q]+=w*e[q]*f;}
+ return s.map(v=>Math.max(0,Math.min(1,v/255)));}
+const NF=10,cpos=[],ccol=[],cix=[],clp=[];let amin=1e9,amax=-1e9,bmin=1e9,bmax=-1e9;
+for(let d1=0;d1<4;d1++)for(let d2=d1+1;d2<4;d2++)for(let f=0;f<4;f++){const fr=[0,1,2,3].filter(x=>x!==d1&&x!==d2),base=cpos.length/3;
+ for(let i=0;i<=NF;i++)for(let j=0;j<=NF;j++){const v=[0,0,0,0];v[d1]=f&1;v[d2]=f>>1;v[fr[0]]=i/NF;v[fr[1]]=j/NF;
+  const l=cmyk2lab(v[0],v[1],v[2],v[3]);cpos.push(...P(l[0],l[1],l[2]));ccol.push(...cmykRGB(v[0],v[1],v[2],v[3]));
+  amin=Math.min(amin,l[1]);amax=Math.max(amax,l[1]);bmin=Math.min(bmin,l[2]);bmax=Math.max(bmax,l[2]);}
+ for(let i=0;i<NF;i++)for(let j=0;j<NF;j++){const a=base+i*(NF+1)+j,b=a+1,c=a+NF+1,d=c+1;cix.push(a,b,c,b,d,c);
+  clp.push(...cpos.slice(a*3,a*3+3),...cpos.slice(b*3,b*3+3),...cpos.slice(a*3,a*3+3),...cpos.slice(c*3,c*3+3));}}
+const cg=new THREE.BufferGeometry();cg.setAttribute('position',new THREE.Float32BufferAttribute(cpos,3));cg.setAttribute('color',new THREE.Float32BufferAttribute(ccol,3));cg.setIndex(cix);
+cmyk.add(new THREE.Mesh(cg,new THREE.MeshBasicMaterial({vertexColors:true,transparent:true,opacity:0.4,side:THREE.DoubleSide,depthWrite:false,clippingPlanes:CP})));
+const clg=new THREE.BufferGeometry();clg.setAttribute('position',new THREE.Float32BufferAttribute(clp,3));
+cmyk.add(new THREE.LineSegments(clg,new THREE.LineBasicMaterial({color:0xffffff,transparent:true,opacity:0.15,clippingPlanes:CP})));
+const dk=cmyk2lab(1,1,1,1);
+const kg=new THREE.BufferGeometry();kg.setAttribute('position',new THREE.Float32BufferAttribute([...P(95,0,-2),...P(16,0,0),...P(dk[0],dk[1],dk[2])],3));
+cmyk.add(new THREE.Line(kg,new THREE.LineBasicMaterial({color:0xffffff})));
+[['Papier',[95,0,-2],[244,242,236]],['K',[16,0,0],[29,29,27]],['C',[55,-37,-50],[0,159,227]],['M',[48,74,-3],[230,0,126]],['Y',[89,-5,93],[255,237,0]],['R',[47,68,48],[255,0,0]],['G',[50,-65,27],[0,255,0]],['B',[24,22,-46],[0,0,255]],['Tiefschwarz',dk,[0,0,0]]].forEach(([t,l,c])=>{
+ const p=P(l[0],l[1],l[2]),f=c.map(v=>v/255);lbl(t,[p[0],p[1]+(t==='Tiefschwarz'?-0.04:0.1),p[2]],(0.3*f[0]+0.6*f[1]+0.1*f[2])>0.55?'#000':'#fff',0.1,true,css(f));cmykL.add(grp.children[grp.children.length-1]);});
+const dE3=(p,q)=>Math.hypot(p[0]-q[0],p[1]-q[1],p[2]-q[2]);
+function solveCMYK(t){const cost=v=>dE3(cmyk2lab(v[0],v[1],v[2],v[3]),t)+0.3*(v[0]+v[1]+v[2]+v[3]);
+ const rg=lab2rgb(t[0],t[1],t[2]).rgb,c0=1-rg[0],m0=1-rg[1],y0=1-rg[2],k0=Math.min(c0,m0,y0)*0.6;
+ const mv=[[1,0,0,0],[-1,0,0,0],[0,1,0,0],[0,-1,0,0],[0,0,1,0],[0,0,-1,0],[0,0,0,1],[0,0,0,-1],[1,1,1,0],[-1,-1,-1,0],[-1,-1,-1,1],[1,1,1,-1]];
+ let best=null,bc=1e9;
+ [[c0-k0,m0-k0,y0-k0,k0],[0,0,0,0]].forEach(s0=>{let v=s0.map(x=>Math.max(0,Math.min(1,x))),c=cost(v);
+  for(const sz of [0.16,0.08,0.04,0.02,0.01,0.005]){for(let it=0;it<30;it++){let imp=false;
+   for(const m of mv){const w=v.map((x,i)=>Math.max(0,Math.min(1,x+m[i]*sz))),cw=cost(w);if(cw<c-1e-9){v=w;c=cw;imp=true;}}
+   if(!imp)break;}}
+  if(c<bc){bc=c;best=v;}});
+ return{v:best,e:dE3(cmyk2lab(best[0],best[1],best[2],best[3]),t)};}
+let cst=null;
+function cmykSync(L,a,b){let v,e=0;if(cst)v=cst;else{const s=solveCMYK([L,a,b]);v=s.v;e=s.e;}
+ ['cC','cM','cY','cK'].forEach((id,i)=>sv(id,Math.round(v[i]*100)));
+ return 'CMYK '+v.map(x=>Math.round(x*100)).join(', ')+(e>4?' (nächstliegend, außerhalb CMYK)':'');}
+const cmykText='CMYK Umfang (Näherung): a* '+Math.round(amin)+' bis +'+Math.round(amax)+', b* '+Math.round(bmin)+' bis +'+Math.round(bmax);
+function setMode(){const m=$('mode').value;sPts.visible=m!=='cmyk';srgbCapG.visible=m!=='cmyk';srgbL.visible=m!=='cmyk'&&$('lrgb').checked;cmykL.visible=$('lcmyk').checked;cmyk.visible=m!=='srgb';
+ $('ttl').textContent={srgb:'CIELab Farbraum in 3D: sRGB Farbumfang',cmyk:'CIELab Farbraum in 3D: CMYK Farbumfang (FOGRA39, Näherung)',both:'CIELab Farbraum in 3D: sRGB und CMYK im Vergleich'}[m];
+ $('gam').textContent=m==='cmyk'?cmykText:m==='both'?srgbText+' | '+cmykText:srgbText;}
+// Gefüllte Schnittflächen
+const spos=[],six=[],SN=20;
+for(let f=0;f<6;f++){const ax=f>>1,val=f&1,base=spos.length/3;
+ for(let i=0;i<=SN;i++)for(let j=0;j<=SN;j++){const v=[0,0,0];v[ax]=val;v[(ax+1)%3]=i/SN;v[(ax+2)%3]=j/SN;const l=rgb2lab(v[0],v[1],v[2]);spos.push(...P(l[0],l[1],l[2]));}
+ for(let i=0;i<SN;i++)for(let j=0;j<SN;j++){const a=base+i*(SN+1)+j,b=a+1,c=a+SN+1,d=c+1;six.push(a,b,c,b,d,c);}}
+function sliceR(pos,tri,yc,NA){const R=new Float32Array(NA),segs=[];
+ for(let t=0;t<tri.length;t+=3){const a=tri[t]*3,b=tri[t+1]*3,c=tri[t+2]*3,y0=pos[a+1]-yc,y1=pos[b+1]-yc,y2=pos[c+1]-yc;
+  if((y0>0&&y1>0&&y2>0)||(y0<0&&y1<0&&y2<0))continue;
+  const pts=[],edge=(i,j,yi,yj)=>{if((yi<0)!==(yj<0)){const f=yi/(yi-yj);pts.push(pos[i]+(pos[j]-pos[i])*f,pos[i+2]+(pos[j+2]-pos[i+2])*f);}};
+  edge(a,b,y0,y1);edge(b,c,y1,y2);edge(c,a,y2,y0);
+  if(pts.length>=4)segs.push(pts[0],pts[1],pts[2],pts[3]);}
+ for(let k=0;k<NA;k++){const th=k/NA*2*Math.PI,dx=Math.cos(th),dz=Math.sin(th);let best=0;
+  for(let s=0;s<segs.length;s+=4){const x1=segs[s],z1=segs[s+1],ex=segs[s+2]-x1,ez=segs[s+3]-z1,D=ex*dz-dx*ez;
+   if(Math.abs(D)<1e-12)continue;const t=(ex*z1-ez*x1)/D,u=(dx*z1-dz*x1)/D;
+   if(t>best&&u>=0&&u<=1)best=t;}
+  R[k]=best;}
+ return R;}
+function capGeo(R,yc,colFn){const NA=R.length,RN=6,pos=[0,yc,0],col=[],idx=[];
+ col.push(...colFn(yc*60+50,0,0));
+ for(let r=1;r<=RN;r++)for(let k=0;k<NA;k++){const th=k/NA*2*Math.PI,f=r/RN*R[k],x=f*Math.cos(th),z=f*Math.sin(th);pos.push(x,yc,z);col.push(...colFn(yc*60+50,x*60,-z*60));}
+ for(let k=0;k<NA;k++)idx.push(0,1+k,1+(k+1)%NA);
+ for(let r=1;r<RN;r++)for(let k=0;k<NA;k++){const k2=(k+1)%NA,a=1+(r-1)*NA+k,b=1+(r-1)*NA+k2,c=1+r*NA+k,d=1+r*NA+k2;idx.push(a,c,b,b,c,d);}
+ const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));g.setAttribute('color',new THREE.Float32BufferAttribute(col,3));g.setIndex(idx);return g;}
+const capMat=o=>new THREE.MeshBasicMaterial({vertexColors:true,transparent:true,opacity:o,side:THREE.DoubleSide,depthWrite:false});
+const capH=new THREE.Mesh(new THREE.BufferGeometry(),capMat(0.18)),capC=new THREE.Mesh(new THREE.BufferGeometry(),capMat(0.92)),capS=new THREE.Mesh(new THREE.BufferGeometry(),capMat(0.9));
+capH.renderOrder=1;capS.renderOrder=2;capC.renderOrder=3;
+hull.add(capH);cmyk.add(capC);const srgbCapG=new THREE.Group();srgbCapG.add(capS);grp.add(srgbCapG);
+const colLab=(L,a,b)=>lab2rgb(L,a,b).rgb;
+function updCaps(cv){const on=cv>0&&cv<100;[capH,capS,capC].forEach(m=>{m.visible=on;});if(!on)return;
+ const yc=(cv-50)/60+0.003,NA=120;
+ capH.geometry.dispose();capH.geometry=capGeo(sliceR(vp,ix,yc,NA),yc,()=>[0.55,0.58,0.65]);
+ capC.geometry.dispose();capC.geometry=capGeo(sliceR(cpos,cix,yc,NA),yc,colLab);
+ capS.geometry.dispose();capS.geometry=capGeo(sliceR(spos,six,yc,NA),yc,colLab);}
+capReady=true;
+$('mode').onchange=setMode;$('lrgb').onchange=setMode;$('lcmyk').onchange=setMode;setMode();
+$('volb').onclick=()=>{const v=$('vol');v.className='card show';v.textContent='Berechne ...';
+ setTimeout(()=>{const cell=3;
+  const vol=gen=>{const mp=new Map();gen(p=>{const key=(Math.floor(p[1]/cell)+100)*1000+Math.floor(p[2]/cell)+100;let e=mp.get(key);if(!e){e=[1e9,-1e9];mp.set(key,e);}if(p[0]<e[0])e[0]=p[0];if(p[0]>e[1])e[1]=p[0];});let s=0;mp.forEach(e=>s+=(e[1]-e[0])*cell*cell);return s;};
+  const vs=vol(f=>{const N=80;for(let r=0;r<=N;r++)for(let g=0;g<=N;g++)for(let b=0;b<=N;b++)f(rgb2lab(r/N,g/N,b/N));});
+  const vc=vol(f=>{for(let k=0;k<=20;k++)for(let c=0;c<=32;c++)for(let m=0;m<=32;m++)for(let y=0;y<=32;y++)f(cmyk2lab(c/32,m/32,y/32,k/20));});
+  const fm=x=>(Math.round(x/1000)*1000).toLocaleString('de-AT');
+  v.innerHTML='<b>Volumen im Lab Raum (Einheit: ΔE³)</b><br>sRGB: ca. '+fm(vs)+'<br>CMYK (FOGRA39, Näherung): ca. '+fm(vc)+'<br>CMYK entspricht ca. '+Math.round(vc/vs*100)+' % von sRGB<br><p style="margin:8px 0 4px"><b>Warum Volumen?</b> Die Zahl der Werte (z. B. 16,7 Mio. bei 8 Bit RGB) hängt nur von der Bittiefe ab und sagt nichts über die Größe eines Farbraums. Lab ist so aufgebaut, dass gleiche Abstände ungefähr gleich großen Farbunterschieden entsprechen: ΔE von 1 bis 2 ist etwa der kleinste Unterschied, den das Auge wahrnimmt. Das Volumen in ΔE³ zeigt daher grob, wie viel Platz ein Farbraum im Wahrnehmungsraum einnimmt, also wie viele unterscheidbare Farben er enthält. So lassen sich sRGB und CMYK fair vergleichen.</p><p style="margin:4px 0"><b>Grenzen:</b> Lab ist nur näherungsweise gleichabständig. Das Volumen sagt außerdem nicht, welche Farben fehlen: Cyan liegt z. B. in CMYK außerhalb von sRGB, obwohl sRGB insgesamt größer ist.</p><span class="mu">Richtwert (Rasterverfahren). <a href="#" id="vx">schließen</a></span>';
+  $('vx').onclick=e=>{e.preventDefault();v.className='card';};},30);};
+function size(){const w=box.clientWidth,h=box.clientHeight;ren.setSize(w,h);cam.aspect=w/h;cam.updateProjectionMatrix();}
+window.addEventListener('resize',size);size();
+let drag=null;
+let pan=false,pmode=false;box.oncontextmenu=e=>e.preventDefault();
+$('pm').onchange=()=>{pmode=$('pm').checked;};
+$('rv').onchange=()=>{if(!$('rv').checked)return;grp.position.set(0,0,0);grp.rotation.set(0.35,-0.6,0);cam.position.z=5.6;setTimeout(()=>{$('rv').checked=false;},450);};
+const ptr=new Map();let pd=0;
+box.addEventListener('pointerdown',e=>{ptr.set(e.pointerId,[e.clientX,e.clientY]);drag=[e.clientX,e.clientY];pan=pmode||e.shiftKey||e.button===2;pd=0;box.setPointerCapture(e.pointerId);});
+box.addEventListener('pointerup',e=>{ptr.delete(e.pointerId);drag=ptr.size?[...ptr.values()][0]:null;pd=0;});
+box.addEventListener('pointercancel',e=>{ptr.delete(e.pointerId);drag=null;pd=0;});
+box.addEventListener('pointermove',e=>{if(!ptr.has(e.pointerId))return;
+ if(ptr.size===2){const o=[...ptr.entries()].find(([id])=>id!==e.pointerId)[1];ptr.set(e.pointerId,[e.clientX,e.clientY]);const d=Math.hypot(e.clientX-o[0],e.clientY-o[1]);if(pd&&d>0)cam.position.z=Math.max(0.8,Math.min(12,cam.position.z*pd/d));pd=d;return;}
+ const dx=e.clientX-drag[0],dy=e.clientY-drag[1];ptr.set(e.pointerId,[e.clientX,e.clientY]);if(pan){const k=cam.position.z*0.002;grp.position.x+=dx*k;grp.position.y-=dy*k;}else{grp.rotation.y+=dx*0.01;grp.rotation.x+=dy*0.01;}drag=[e.clientX,e.clientY];});
+box.addEventListener('wheel',e=>{e.preventDefault();cam.position.z=Math.max(0.8,Math.min(12,cam.position.z*(1+e.deltaY*0.0015)));},{passive:false});
+var capReady=false,lastCutV=null;
+(function loop(){requestAnimationFrame(loop);if(capReady){const cv=+$('cut').value;if(cv!==lastCutV){lastCutV=cv;updCaps(cv);}}grp.updateMatrixWorld();cutPlane.set(new THREE.Vector3(0,-1,0),(+$('cut').value-50)/60+0.003).applyMatrix4(grp.matrixWorld);ren.render(scene,cam);})();
+
+// Regler
+const S={L:$('L'),a:$('a'),b:$('b'),cut:$('cut')};
+let st=null;let lastCss='#0b6e97';function paintLogo(){const o=document.querySelector('main>section:nth-child(2)').classList.contains('open');$('logo').style.setProperty('--lc',o?'#0b6e97':lastCss);}function cur(){return st||[+S.L.value,+S.a.value,+S.b.value];}
+function upd(){const[L,a,b]=cur();
+ sv('Lv',Math.round(L));sv('av',Math.round(a));sv('bv',Math.round(b));sv('cv',S.cut.value);
+ const r=lab2rgb(L,a,b);$('sw').style.background=css(r.rgb);lastCss=css(r.rgb);paintLogo();
+ const rv=r.rgb.map(c=>Math.round(c*255));[['Rs','Rv'],['Gs','Gv'],['Bs','Bv']].forEach(([s,n],i)=>{if(document.activeElement!==$(s))$(s).value=rv[i];sv(n,rv[i]);});
+ mk.material.color.setRGB(...r.rgb);mk.position.set(...P(L,a,b));ring.position.copy(mk.position);
+ const C=Math.hypot(a,b),h=(Math.atan2(b,a)*180/Math.PI+360)%360;
+ $('info').innerHTML=(r.out?'außerhalb sRGB (Farbe angenähert)':'RGB '+r.rgb.map(v=>Math.round(v*255)).join(', '))+'<br>'+cmykSync(L,a,b);
+ const cut=+S.cut.value;let n=0;while(n<pts.length&&pts[n].l[0]<=cut)n++;geo.setDrawRange(0,n);}
+const sv=(id,v)=>{const e=$(id);if(document.activeElement!==e)e.value=v;};
+Object.values(S).forEach(s=>s.addEventListener('input',()=>{if(s!==S.cut){st=null;cst=null;}upd();}));
+[['Lv','L'],['av','a'],['bv','b'],['cv','cut']].forEach(([n,s])=>{const e=$(n),sl=S[s];
+ e.addEventListener('input',()=>{const v=parseFloat(e.value);if(isNaN(v))return;if(sl!==S.cut){st=null;cst=null;}sl.value=Math.max(+sl.min,Math.min(+sl.max,Math.round(v)));upd();});
+ e.addEventListener('blur',()=>{e.value=sl.value;});
+ e.addEventListener('keydown',ev=>{if(ev.key==='Enter')e.blur();});});
+function fromRGB(i,val){const v=[+$('Rs').value,+$('Gs').value,+$('Bs').value];v[i]=val;const l=rgb2lab(v[0]/255,v[1]/255,v[2]/255);st=l;cst=null;S.L.value=Math.round(l[0]);S.a.value=Math.round(l[1]);S.b.value=Math.round(l[2]);upd();}
+[['Rs','Rv',0],['Gs','Gv',1],['Bs','Bv',2]].forEach(([s,n,i])=>{const sl=$(s),e=$(n);
+ sl.addEventListener('input',()=>fromRGB(i,+sl.value));
+ e.addEventListener('input',()=>{const v=parseFloat(e.value);if(isNaN(v))return;sl.value=Math.max(0,Math.min(255,Math.round(v)));fromRGB(i,+sl.value);});
+ e.addEventListener('blur',()=>{e.value=sl.value;});
+ e.addEventListener('keydown',ev=>{if(ev.key==='Enter')e.blur();});});
+function fromCMYK(){const v=['cC','cM','cY','cK'].map(id=>{const t=parseFloat($(id).value);return isNaN(t)?0:Math.max(0,Math.min(100,t))/100;});
+ cst=v;const l=cmyk2lab(v[0],v[1],v[2],v[3]);st=l;S.L.value=Math.round(l[0]);S.a.value=Math.round(l[1]);S.b.value=Math.round(l[2]);upd();}
+['cC','cM','cY','cK'].forEach(id=>{const e=$(id);e.addEventListener('input',()=>{if(isNaN(parseFloat(e.value)))return;fromCMYK();});
+ e.addEventListener('blur',()=>{const t=parseFloat(e.value);e.value=isNaN(t)?0:Math.round(Math.max(0,Math.min(100,t)));});
+ e.addEventListener('keydown',ev=>{if(ev.key==='Enter')e.blur();});});
+upd();
+
+// Übungen
+const rnd=(x,y)=>Math.round(x+Math.random()*(y-x));
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+const shuf=a=>a.map(v=>[Math.random(),v]).sort((p,q)=>p[0]-q[0]).map(p=>p[1]);
+const dE=(p,q)=>Math.hypot(p[0]-q[0],p[1]-q[1],p[2]-q[2]);
+const fmtLab=l=>'L* '+l[0]+', a* '+l[1]+', b* '+l[2];
+const sg2=v=>Math.random()<0.5?-v:v;
+const T2=[[3,4,5],[6,8,10],[5,12,13],[8,15,17],[9,12,15]],T3=[[1,2,2,3],[2,3,6,7],[4,4,7,9],[2,6,9,11],[6,6,7,11],[2,10,11,15]];
+const PASS=8,NAMES5=['Rot','Grün','Gelb','Blau','Grau'];
+const BASE={Rot:[50,70,55],'Grün':[55,-60,40],Gelb:[90,-5,85],Blau:[35,25,-65],Grau:[60,0,0],Orange:[68,35,70],Violett:[35,45,-40]};
+let tasks,idx,score,done,curLv=1,unlocked=1,tq,dsel=null;
+try{unlocked=Math.max(1,Math.min(3,+localStorage.getItem('cielab_lv')||1));}catch(e){}
+const saveLv=()=>{try{localStorage.setItem('cielab_lv',unlocked);}catch(e){}};
+const BANK={
+1:[{q:'Wofür steht L* im Lab Farbraum?',a:'Helligkeit',d:['Sättigung','Farbton','Lichtart'],ex:'L* ist die Helligkeit von 0 (Schwarz) bis 100 (Weiß).'},
+ {q:'Welche beiden Farben stehen sich auf der a* Achse gegenüber?',a:'Grün und Rot',d:['Blau und Gelb','Schwarz und Weiß','Cyan und Magenta'],ex:'a*: minus Grün, plus Rot. Die b* Achse läuft von Blau nach Gelb.'},
+ {q:'Was bedeutet a* = 0 und b* = 0?',a:'Die Farbe ist ein neutrales Grau',d:['Die Farbe ist ein reines Rot','Die Farbe ist ein reines Blau','Die Farbe ist maximal hell'],ex:'Unbunt heißt grau. Alle unbunten Farben liegen auf der L* Achse, von Schwarz bis Weiß.'},
+ {q:'Welchen Wertebereich hat L*?',a:'0 bis 100',d:['-100 bis +100','0 bis 255','0 bis 360'],ex:'0 ist Schwarz, 100 ist Weiß.'},
+ {q:'Was liegt auf der L* Achse?',a:'Alle Grautöne',d:['Nur Rot und Grün','Nur Blau und Gelb','Nur die Farbe Weiß'],ex:'Auf der L* Achse sind a* und b* gleich 0. Das sind alle Grautöne von Schwarz bis Weiß.'},
+ {q:'Was beschreibt der Wert b*?',a:'Die Blau Gelb Achse',d:['Die Rot Grün Achse','Die Helligkeit der Farbe','Der Abstand zweier Farben'],ex:'b*: minus Blau, plus Gelb. a*: minus Grün, plus Rot.'},
+ {q:'Welche Farbe liegt bei hohem positivem a* und positivem b*?',a:'Orange bis Rot',d:['Blau bis Violett','Grün bis Cyan','Ein helles Grau'],ex:'Plus a* ist Rot, plus b* ist Gelb. Beides zusammen ergibt Orange bis Rot.'},
+ {q:'Welcher Wert gehört zu einer sehr dunklen Farbe?',a:'L* = 10',d:['L* = 55','L* = 75','L* = 95'],ex:'Die Helligkeit steht in L*. Ein kleiner Wert heißt dunkel.'}],
+2:[{q:'Warum nennt man Lab geräteunabhängig?',a:'Es beruht auf der Wahrnehmung des menschlichen Auges',d:['Es beruht auf den Eigenschaften des Monitors','Es beruht auf den Eigenschaften des Druckers','Es beruht auf den Eigenschaften des Scanners'],ex:'RGB und CMYK sind dagegen geräte bzw. prozessabhängig.'},
+ {q:'Welche Farbmischung nutzt ein Monitor?',a:'Additiv (RGB)',d:['Subtraktiv','Additiv (CMYK)','Subtraktiv (CMYK)'],ex:'Monitore mischen Licht additiv, der Druck mischt Farbe subtraktiv.'},
+ {q:'Wofür steht ΔE?',a:'Abstand zweier Farborte im Lab Raum',d:['Helligkeit eines Farborts im Lab Raum','Sättigung eines Farborts im Lab','Temperatur eines Farborts im Lab'],ex:'ΔE ist der Abstand im Lab Raum.'},
+ {q:'Welche Normlichtart gilt im Druck (ISO 3664) üblicherweise?',a:'D50 (5000 K)',d:['D65 (6500 K)','A (2856 K)','E (5454 K)'],ex:'D50 für Druck und Prüfung, D65 für Monitore (sRGB).'},
+ {q:'Wofür steht das K in CMYK?',a:'Key (Schwarz)',d:['Kobalt (Blau)','Karmin (Rot)','Kontur (Linie)'],ex:'K steht für Key, die Schlüsselfarbe Schwarz.'},
+ {q:'Welcher Farbraum ist üblich für Monitore und das Web?',a:'sRGB (IEC 61966-2-1)',d:['FOGRA39','ISO Coated v2','CIELab'],ex:'FOGRA39 und ISO Coated sind Druckbedingungen, CIELab ist ein Referenzraum.'},
+ {q:'Welche Aussage zu CIELab stimmt?',a:'Er umfasst alle sichtbaren Farben',d:['Er umfasst nur die druckbaren Farben','Er umfasst nur die Monitorfarben','Er umfasst nur die Pigmentfarben'],ex:'sRGB und CMYK liegen beide innerhalb des sichtbaren Bereichs.'},
+ {q:'Was passiert mit ΔE, wenn zwei Farben ähnlicher werden?',a:'ΔE wird kleiner',d:['ΔE wird größer','ΔE bleibt gleich','ΔE wird negativ'],ex:'ΔE ist ein Abstand und wird nie negativ. Kleiner Abstand heißt ähnliche Farben.'}],
+3:[{q:'Welche Rolle hat Lab im Farbmanagement?',a:'Referenzraum zwischen Geräteprofilen',d:['Farbraum des verwendeten Druckers','Farbraum des verwendeten Monitors','Dateiformat für komprimierte Bilddaten'],ex:'Profile verbinden Gerätefarben über Lab oder XYZ (Profile Connection Space).'},
+ {q:'Was passiert mit Farben außerhalb des Zielfarbraums bei der Umrechnung?',a:'Sie werden in den Umfang abgebildet',d:['Sie werden originalgetreu gedruckt','Sie werden einfach komplett weggelassen','Die Umrechnung wird einfach abgebrochen'],ex:'Das nennt man Gamut Mapping. Die Methode bestimmt der Rendering Intent.'},
+ {q:'Warum gilt ΔE nur näherungsweise?',a:'Lab ist nicht perfekt gleichabständig',d:['Lab besitzt nur zwei echte Farbachsen','ΔE ist nur für Druckfarben definiert','ΔE gilt nur für sehr dunkle Farben'],ex:'Deshalb gibt es verbesserte Formeln wie ΔE 2000.'},
+ {q:'Was legt der Rendering Intent fest?',a:'Die Umrechnungsmethode',d:['Die Auflösung des Drucks','Die Wahl des Papiers','Die Größe des Umfangs'],ex:'Zum Beispiel relativ farbmetrisch oder perzeptiv.'},
+ {q:'Wie verhält sich CMYK im Bereich Cyan zu sRGB?',a:'Hier ragt CMYK über sRGB hinaus',d:['Hier ist sRGB deutlich größer','Beide sind hier exakt gleich groß','Hier gibt es in CMYK keine Farben'],ex:'Das Druck Cyan liegt außerhalb von sRGB, bei Grün, Orange und Rot ist sRGB größer.'},
+ {q:'Was zeigt das Volumen in ΔE³?',a:'Die Größe des Farbumfangs',d:['Die Helligkeit des Farbraums','Die Dauer der Umrechnung','Die Zahl der Druckfarben'],ex:'Es ist ein Richtwert dafür, wie viele unterscheidbare Farben ein Farbraum enthält.'},
+ {q:'Wofür wurde der Term RT in ΔE00 eingeführt?',a:'Zur Korrektur im Blau Bereich',d:['Zur Korrektur der Papierfarbe','Zur Korrektur der Messgeometrie','Zur Korrektur der Lichtart'],ex:'Im Blau Bereich ist Lab besonders ungleichmäßig. RT gleicht das aus.'}]};
+const dnd=(q,pairs,ex)=>({kind:'dnd',q,pairs,ex});
+const cloze=(parts,ex)=>({kind:'cloze',q:'Fülle die Lücken. Wähle in jedem Feld die richtige Antwort.',parts,ex});
+function dE00(l1,l2){const L1=l1[0],a1=l1[1],b1=l1[2],L2=l2[0],a2=l2[1],b2=l2[2],rad=Math.PI/180,p7=Math.pow(25,7);
+ const C1=Math.hypot(a1,b1),C2=Math.hypot(a2,b2),Cb=(C1+C2)/2,G=0.5*(1-Math.sqrt(Math.pow(Cb,7)/(Math.pow(Cb,7)+p7)));
+ const a1p=(1+G)*a1,a2p=(1+G)*a2,C1p=Math.hypot(a1p,b1),C2p=Math.hypot(a2p,b2);
+ const hf=(b,a)=>{const x=Math.atan2(b,a)/rad;return x<0?x+360:x;};
+ const h1p=C1p===0?0:hf(b1,a1p),h2p=C2p===0?0:hf(b2,a2p),dLp=L2-L1,dCp=C2p-C1p;let dhp=0;
+ if(C1p*C2p!==0){dhp=h2p-h1p;if(dhp>180)dhp-=360;else if(dhp<-180)dhp+=360;}
+ const dHp=2*Math.sqrt(C1p*C2p)*Math.sin(dhp*rad/2),Lb=(L1+L2)/2,Cbp=(C1p+C2p)/2;let hb;
+ if(C1p*C2p===0)hb=h1p+h2p;else hb=Math.abs(h1p-h2p)<=180?(h1p+h2p)/2:(h1p+h2p<360?(h1p+h2p+360)/2:(h1p+h2p-360)/2);
+ const T=1-0.17*Math.cos((hb-30)*rad)+0.24*Math.cos(2*hb*rad)+0.32*Math.cos((3*hb+6)*rad)-0.20*Math.cos((4*hb-63)*rad);
+ const dth=30*Math.exp(-Math.pow((hb-275)/25,2)),Rc=2*Math.sqrt(Math.pow(Cbp,7)/(Math.pow(Cbp,7)+p7));
+ const Sl=1+0.015*Math.pow(Lb-50,2)/Math.sqrt(20+Math.pow(Lb-50,2)),Sc=1+0.045*Cbp,Sh=1+0.015*Cbp*T,Rt=-Math.sin(2*dth*rad)*Rc;
+ return Math.sqrt(Math.pow(dLp/Sl,2)+Math.pow(dCp/Sc,2)+Math.pow(dHp/Sh,2)+Rt*(dCp/Sc)*(dHp/Sh));}
+const G={
+ theory(lv){const t=tq[lv].shift();return{kind:'choice',q:t.q,opts:shuf([t.a].concat(t.d)),ans:t.a,ex:t.ex};},
+ theoryDE(){return{kind:'choice',q:'Was ist der wichtigste Unterschied zwischen ΔE76 und ΔE00?',opts:shuf(['ΔE00 korrigiert den Abstand nach der Wahrnehmung','ΔE76 korrigiert den Abstand nach der Wahrnehmung','ΔE00 rechnet nur mit der Helligkeit, nicht mit Farbe','ΔE76 und ΔE00 liefern immer exakt denselben Wert']),ans:'ΔE00 korrigiert den Abstand nach der Wahrnehmung',ex:'ΔE76 ist der geometrische Abstand im Lab Raum. ΔE00 (CIEDE2000) wurde mit Seh Experimenten an die Wahrnehmung angepasst und gewichtet Helligkeit, Buntheit und Farbton einzeln.'};},
+ theoryC(){return{kind:'choice',q:'Zwei Farbpaare haben dasselbe ΔE76. Das eine Paar ist sehr bunt, das andere fast grau. Wie verhält sich ΔE00?',opts:shuf(['Beim bunten Paar ist ΔE00 kleiner','Beim grauen Paar ist ΔE00 kleiner','Beide Paare haben exakt dasselbe ΔE00','ΔE00 ist immer exakt gleich ΔE76']),ans:'Beim bunten Paar ist ΔE00 kleiner',ex:'Der Faktor SC wächst mit der Buntheit. Gleiche Abstände zählen bei bunten Farben weniger, nahe Grau mehr.'};},
+ theoryParts(){return{kind:'choice',q:'In welche drei Anteile zerlegt ΔE00 den Farbunterschied?',opts:shuf(['Helligkeit, Buntheit und Farbton','Lichtart, Beobachter, Papier','Rot, Grün und Blau im Verhältnis','Cyan, Magenta, Gelb und Schwarz']),ans:'Helligkeit, Buntheit und Farbton',ex:'ΔL′, ΔC′ und ΔH′, jeweils mit eigenem Gewichtungsfaktor (SL, SC, SH).'};},
+ dndDE00(){return dnd('Wie stark fällt ein Farbunterschied auf? Ziehe zu jedem ΔE00 Bereich die passende Beurteilung.',[['ΔE00 von 0 bis 1','nicht erkennbar'],['ΔE00 von 1 bis 2','sehr kleine Abweichung'],['ΔE00 von 2 bis 3','klare Abweichung, meist tolerierbar'],['ΔE00 über 3','deutlich sichtbar, Korrektur nötig']],'Faustregel für ΔE00. Je nach Norm und Anwendung gelten andere Grenzen.');},
+ compareDE(){const mk=(L,c,h,d)=>{const r=h*Math.PI/180;return[[L,c*Math.cos(r),c*Math.sin(r)],[L,(c+d)*Math.cos(r),(c+d)*Math.sin(r)]].map(x=>x.map(Math.round));};
+  const h=rnd(0,359),L=rnd(45,65),low=mk(L,rnd(8,14),h,10),high=mk(L,rnd(58,70),h,10),flip=Math.random()<0.5,A=flip?high:low,B=flip?low:high;
+  const a76=dE(A[0],A[1]),b76=dE(B[0],B[1]),a00=dE00(A[0],A[1]),b00=dE00(B[0],B[1]);
+  return{kind:'choice',q:'Zwei Farbpaare haben fast denselben Abstand ΔE76 (etwa 10).<br>Paar A: '+fmtLab(A[0])+' und '+fmtLab(A[1])+'<br>Paar B: '+fmtLab(B[0])+' und '+fmtLab(B[1])+'<br>Bei welchem Paar ist ΔE00 kleiner?',opts:['Paar A','Paar B','Beide gleich'],ans:a00<b00?'Paar A':'Paar B',ex:'ΔE00 gewichtet Abweichungen bei bunten Farben schwächer, bei Grautönen stärker. ΔE76: A '+a76.toFixed(1)+', B '+b76.toFixed(1)+'. ΔE00: A '+a00.toFixed(1)+', B '+b00.toFixed(1)+'.'};},
+ hell(){const c=pick(['hell','mittel','dunkel']),L=c==='hell'?rnd(78,98):c==='mittel'?rnd(38,62):rnd(5,22);
+  return{kind:'choice',q:'L* = '+L+'. Wie hell ist die Farbe?',opts:['dunkel','mittel','hell'],ans:c,ex:'L* geht von 0 (Schwarz) bis 100 (Weiß). Dunkel: etwa unter 30, hell: etwa über 70.'};},
+ richt(){let a,b;do{a=rnd(-80,80);b=rnd(-80,80);}while(Math.abs(Math.abs(a)-Math.abs(b))<30);
+  return{kind:'choice',q:'Farbort L* '+rnd(30,80)+', a* '+a+', b* '+b+'. Welche Buntheit dominiert?',opts:['Rot','Grün','Gelb','Blau'],ans:Math.abs(a)>Math.abs(b)?(a>0?'Rot':'Grün'):(b>0?'Gelb':'Blau'),ex:'a*: plus = Rot, minus = Grün. b*: plus = Gelb, minus = Blau. Der größere Betrag dominiert.'};},
+ name(lv){const names=lv<2?NAMES5:Object.keys(BASE),n=pick(names),b=BASE[n],j=n==='Grau'?3:8;
+  const l=[b[0]+rnd(-5,5),b[1]+rnd(-j,j),b[2]+rnd(-j,j)];
+  return{kind:'choice',q:'Welche Farbe liegt etwa bei '+fmtLab(l)+'?',opts:shuf([n].concat(shuf(names.filter(x=>x!==n)).slice(0,3))),ans:n,ex:'Grau liegt nahe der L* Achse (a* und b* fast 0). Sonst entscheiden Vorzeichen und Größe von a* und b*.'};},
+ dE(lv){const p=[rnd(40,70),rnd(-30,30),rnd(-30,30)],d=[0,0,0];let ans,ex;
+  if(lv<2){d[rnd(0,2)]=sg2(rnd(3,12));ans=Math.max(...d.map(Math.abs));ex='Nur ein Wert ändert sich. ΔE ist dieser Unterschied.';}
+  else if(lv<3){const t=pick(T2),ax=shuf([0,1,2]);d[ax[0]]=sg2(t[0]);d[ax[1]]=sg2(t[1]);ans=t[2];ex='Zwei Unterschiede, z. B. 3 und 4 ergibt Wurzel aus (9 + 16) = 5.';}
+  else{const t=pick(T3),ax=shuf([0,1,2]);for(let i=0;i<3;i++)d[ax[i]]=sg2(t[i]);ans=t[3];ex='Wurzel aus (ΔL² + Δa² + Δb²).';}
+  ex='Rechenweg: ΔL = '+d[0]+', Δa = '+d[1]+', Δb = '+d[2]+'. ΔE76 = √('+d[0]*d[0]+' + '+d[1]*d[1]+' + '+d[2]*d[2]+') = √'+(d[0]*d[0]+d[1]*d[1]+d[2]*d[2])+' = '+ans+'.';const q=p.map((v,i)=>v+d[i]);
+  return{kind:'num',calc:true,q:'Farbe 1: '+fmtLab(p)+'<br>Farbe 2: '+fmtLab(q)+'<br>Berechne ΔE76 (Abstand im Lab Raum).'+(lv>=2?'<br><span class="mu">ΔE76 = √(ΔL² + Δa² + Δb²)</span>':''),ans,tol:0.05,ex};},
+ target(lv){let tg,r;do{tg=[rnd(30,85),rnd(-60,60),rnd(-60,60)];r=lab2rgb(tg[0],tg[1],tg[2]);}while(r.out);
+  return{kind:'target',q:'Stelle mit den Reglern die Zielfarbe ein.'+(lv<2?'<br><span class="mu">Tipp: erst hell oder dunkel (L*), dann Rot oder Grün (a*), dann Gelb oder Blau (b*).</span>':''),tg,rgb:r.rgb,tol:lv<2?15:lv<3?10:6};},
+ readRGB(){let l,r;do{l=[rnd(30,85),rnd(-50,50),rnd(-50,50)];r=lab2rgb(l[0],l[1],l[2]);}while(r.out);
+  const ch=pick([0,1,2]);return{kind:'num',q:'Stelle mit den Reglern '+fmtLab(l)+' ein. Welchen '+'RGB'[ch]+' Wert (0 bis 255) zeigt das Modell?',ans:Math.round(r.rgb[ch]*255),tol:3,ex:'Der Wert steht in den RGB Feldern rechts neben dem Farbfeld.'};},
+ readLab(){const c=[rnd(0,51)*5,rnd(0,51)*5,rnd(0,51)*5],l=rgb2lab(c[0]/255,c[1]/255,c[2]/255),i=pick([0,1,2]);
+  return{kind:'num',q:'Gib in den RGB Feldern R = '+c[0]+', G = '+c[1]+', B = '+c[2]+' ein. Welchen '+['L*','a*','b*'][i]+' Wert zeigt das Modell?',ans:Math.round(l[i]),tol:2,ex:'Die Lab Werte stehen in den Feldern links neben den Reglern.'};},
+ readCMYK(){const c=[rnd(0,10)*10,rnd(0,10)*10,rnd(0,10)*10,pick([0,0,10,20])],l=cmyk2lab(c[0]/100,c[1]/100,c[2]/100,c[3]/100),i=pick([0,1,2]);
+  return{kind:'num',q:'Gib in den CMYK Feldern C = '+c[0]+', M = '+c[1]+', Y = '+c[2]+', K = '+c[3]+' ein. Welchen '+['L*','a*','b*'][i]+' Wert zeigt das Modell?',ans:Math.round(l[i]),tol:3,ex:'CMYK Werte sind hier eine Modellnäherung (FOGRA39).'};},
+ gamut(){const O=['nur sRGB','nur CMYK','beide','keines von beiden'],want=pick(O);let L,a,b,inS,inC,ok=false;
+  for(let i=0;i<400&&!ok;i++){L=rnd(25,85);a=rnd(-100,100);b=rnd(-100,100);
+   const s1=lab2rgb(L,a*1.08,b*1.08).out,s2=lab2rgb(L,a*0.92,b*0.92).out;if(s1!==s2)continue;
+   const e=solveCMYK([L,a,b]).e;if(e>2&&e<8)continue;inS=!s1;inC=e<=2;
+   const c=inS&&inC?'beide':inS?'nur sRGB':inC?'nur CMYK':'keines von beiden';if(c===want||i>300)ok=true;}
+  if(!ok){L=60;a=0;b=0;inS=true;inC=true;}
+  return{kind:'choice',q:'Farbort L* '+L+', a* '+a+', b* '+b+'. Wo liegt die Farbe?<br><span class="mu">Stelle sie ein: das Farbfeld meldet „außerhalb sRGB“ bzw. „außerhalb CMYK“.</span>',opts:O,ans:inS&&inC?'beide':inS?'nur sRGB':inC?'nur CMYK':'keines von beiden',ex:'sRGB: '+(inS?'ja':'nein')+', CMYK: '+(inC?'ja':'nein')+' (CMYK nach Modellnäherung).'};},
+ dndAxes(){return dnd('Welche Farbe liegt auf welcher Seite der Achse? Ziehe die Farben in die richtigen Felder.',[['+a*','Rot'],['-a*','Grün'],['+b*','Gelb'],['-b*','Blau']],'a*: plus Rot, minus Grün. b*: plus Gelb, minus Blau.');},
+ dndProps(){return dnd('Welche Eigenschaft passt zu welchem Begriff? Ziehe jede Eigenschaft in das passende Feld.',[['Lab','geräteunabhängig'],['sRGB','Monitor, additiv'],['CMYK','Druck, subtraktiv'],['L*','Helligkeit']],'Lab beschreibt die Wahrnehmung, sRGB ist der Monitorfarbraum, CMYK der Druckfarbraum.');},
+ dndDE(){return dnd('Wie stark fällt ein Farbunterschied auf? Ziehe zu jedem ΔE76 Bereich die passende Beurteilung. Kleines ΔE heißt: die beiden Farben sehen fast gleich aus.',[['ΔE76 unter 1','nicht wahrnehmbar'],['ΔE76 von 1 bis 3','gering'],['ΔE76 von 3 bis 6','deutlich'],['ΔE76 über 6','stark']],'Faustregel für ΔE76. Je nach Norm und Anwendung gelten andere Grenzen.');},
+ dndLab(lv){const names=shuf(lv<2?NAMES5:Object.keys(BASE)).slice(0,4);
+  return dnd('Welche Farbe gehört zu welchem Lab Wert? Ziehe jeden Farbnamen in das passende Feld.',names.map(n=>{const b=BASE[n],j=n==='Grau'?3:8;return[fmtLab([b[0]+rnd(-5,5),b[1]+rnd(-j,j),b[2]+rnd(-j,j)]),n];}),'Vorzeichen und Größe von a* und b* bestimmen den Farbton.');},
+ orderL(){const Ls=shuf([rnd(10,25),rnd(35,50),rnd(55,70),rnd(78,95)]);
+  return{kind:'order',q:'Sortiere von dunkel nach hell (L* aufsteigend). Klicke die Farborte in dieser Reihenfolge an.',items:Ls.map(L=>({t:fmtLab([L,rnd(-60,60),rnd(-60,60)]),v:L})),ex:'Je größer L*, desto heller die Farbe.'};},
+ orderGamut(){return{kind:'order',q:'Welcher Farbraum ist am kleinsten, welcher am größten? Klicke die Farbräume der Reihe nach an, vom kleinsten zum größten.',items:shuf([{t:'CMYK (FOGRA39)',v:1},{t:'sRGB',v:2},{t:'CIELab (alle sichtbaren Farben)',v:3}]),ex:'CMYK < sRGB < CIELab. CIELab umfasst alle sichtbaren Farben, sRGB und CMYK liegen darin. CMYK ist insgesamt kleiner als sRGB, nur Cyan ragt darüber hinaus.'};},
+ clozeAx(){return cloze(['Der Wert L* reicht von ',{o:['0','50','255'],a:'0'},' bis ',{o:['100','255','360'],a:'100'},'. Ein positiver a* Wert bedeutet ',{o:['Rot','Grün','Gelb','Blau'],a:'Rot'},', ein negativer b* Wert bedeutet ',{o:['Rot','Grün','Gelb','Blau'],a:'Blau'},'.'],'L* 0 bis 100, +a* Rot, -b* Blau.');},
+ clozeDE(){return cloze(['ΔE ist der ',{o:['Abstand','Winkel','Mittelwert'],a:'Abstand'},' zweier Farborte im Lab Raum. Unter ΔE ',{o:['1','10','50'],a:'1'},' sieht das Auge meist keinen Unterschied. Je ',{o:['größer','kleiner'],a:'größer'},' ΔE, desto stärker weichen die Farben voneinander ab.'],'ΔE ist ein Abstand. Unter 1 meist nicht sichtbar.');},
+ clozeCMYK(){return cloze(['CMYK hat insgesamt einen ',{o:['kleineren','größeren','gleichen'],a:'kleineren'},' Farbumfang als sRGB. Im ',{o:['Cyan','Grün','Orange','Rot'],a:'Cyan'},' Bereich reicht CMYK aber ',{o:['weiter','weniger weit'],a:'weiter'},' als sRGB. Farben außerhalb des Umfangs werden durch ',{o:['Gamut Mapping','Dithering','Rastern'],a:'Gamut Mapping'},' angenähert.'],'Das Druck Cyan liegt außerhalb von sRGB, bei Grün, Orange und Rot ist sRGB größer.');}
+};
+const PLAN={1:['theory','hell','richt','dndAxes','name','theory','dE','target','clozeAx','orderL'],
+2:['theory','theoryParts','name','dE','clozeDE','readRGB','readLab','target','gamut','dndDE'],
+3:['theoryDE','dE','gamut','readCMYK','compareDE','target','clozeCMYK','orderGamut','theoryC','dndDE00']};
+const FORMS={url:'https://forms.cloud.microsoft/Pages/ResponsePage.aspx?id=n1Dn0hYmUU2wgxIAwRnBq7Rsi_lP7QZKi-h5KAvLVYZUQjI2QUtPVzFEQTBEUFg2NzJHVDk0VllXMy4u',level:null,punkte:null};
+function formsBox(lv,sc){let u=FORMS.url;if(FORMS.level&&FORMS.punkte)u+='&'+FORMS.level+'='+encodeURIComponent('Level '+lv)+'&'+FORMS.punkte+'='+sc;
+ return '<div style="margin-top:14px;padding:10px 12px;border:1px solid var(--bd);border-radius:10px"><b>Ergebnis an die Lehrkraft senden</b><br><span class="mu">Trage in Forms ein: Level '+lv+', Punkte '+sc+' von 10.</span><br><a href="'+u+'" target="_blank" rel="noopener" style="display:inline-block;margin-top:8px;padding:8px 14px;background:var(--ac);color:#fff;border-radius:8px;text-decoration:none">Forms öffnen</a></div>';}
+function lvBtns(){$('lvs').innerHTML=[1,2,3].map(n=>'<button class="o" data-l="'+n+'" style="'+(n===curLv?'outline:2px solid var(--ac);':'')+'">'+(n>unlocked?'🔒 ':'')+'Level '+n+'</button>').join('');
+ $('lvs').querySelectorAll('button').forEach(b=>b.onclick=()=>{const n=+b.dataset.l;if(n>unlocked){$('fb').textContent='Level '+n+' ist gesperrt. Schaffe zuerst Level '+(n-1)+' (mindestens '+PASS+' von 10).';$('fb').className='no';return;}curLv=n;start();});}
+function start(){tq={};[1,2,3].forEach(l=>tq[l]=shuf(BANK[l].slice()));tasks=PLAN[curLv].map(n=>G[n](curLv));idx=0;score=0;lvBtns();show();}
+const chip=a=>'<span class="chip'+(dsel===a?' sel':'')+'" draggable="true" data-a="'+a+'">'+a+'</span>';
+function rdDnd(k){const pool=k.pool.filter(a=>!k.place.includes(a));
+ $('in').innerHTML='<div>'+k.pairs.map((p,i)=>'<div class="slot"><span>'+p[0]+'</span><div class="drop" data-i="'+i+'">'+(k.place[i]?chip(k.place[i]):'')+'</div></div>').join('')+'</div><div class="pool">'+pool.map(a=>chip(a)).join('')+'</div>';}
+function place(k,a,i){const o=k.place.indexOf(a);if(o>=0)k.place[o]=null;if(i>=0)k.place[i]=a;dsel=null;rdDnd(k);}
+function rdOrder(k){$('in').innerHTML=k.items.map((it,i)=>'<button class="o" data-i="'+i+'"'+(k.seq.includes(i)?' disabled':'')+'>'+(k.seq.includes(i)?(k.seq.indexOf(i)+1)+'. ':'')+it.t+'</button>').join('<br>')+'<br><button class="o" id="ordr">Zurücksetzen</button>';}
+function buildCalc(){const el=$('calc');let ex='';
+ const keys=[['C','C'],['⌫','bs'],['(','('],[')',')'],['7','7'],['8','8'],['9','9'],['÷','/'],['4','4'],['5','5'],['6','6'],['×','*'],['1','1'],['2','2'],['3','3'],['−','-'],['0','0'],[',','.'],['=','='],['+','+'],['x²','sq'],['√','rt']];
+ el.innerHTML='<input id="cd" readonly value="0"><div class="cg">'+keys.map(k=>'<button class="o" data-k="'+k[1]+'">'+k[0]+'</button>').join('')+'<button class="o" data-k="ok" style="grid-column:3/5">Übernehmen</button></div>';
+ const show=()=>{$('cd').value=(ex||'0').replace(/\*/g,'×').replace(/\//g,'÷').replace(/-/g,'−').replace(/\./g,',');};
+ const val=()=>{if(!/^[0-9+\-*\/().\s]+$/.test(ex))return NaN;try{return Function('"use strict";return ('+ex+')')();}catch(e){return NaN;}};
+ el.onclick=e=>{const b=e.target.closest('button');if(!b)return;const k=b.dataset.k;
+  if(k==='C')ex='';else if(k==='bs')ex=ex.slice(0,-1);
+  else if(k==='='){const v=val();if(!isNaN(v))ex=String(+v.toPrecision(12));}
+  else if(k==='sq'){const v=val();if(!isNaN(v))ex=String(+(v*v).toPrecision(12));}
+  else if(k==='rt'){const v=val();if(!isNaN(v)&&v>=0)ex=String(+Math.sqrt(v).toPrecision(12));}
+  else if(k==='ok'){const v=val();if(!isNaN(v))$('num').value=+v.toFixed(2);}
+  else ex+=k;show();};}
+function show(){const k=tasks[idx];done=false;dsel=null;$('fb').textContent='';$('fb').className='';
+ if(!k){const lv=curLv,ok=score>=PASS;if(ok&&lv<3&&unlocked<=lv){unlocked=lv+1;saveLv();}
+  $('q').innerHTML='<b>Level '+lv+': '+score+' von '+tasks.length+' Punkten.</b><br>'+(ok?(lv<3?'Geschafft! Level '+(lv+1)+' ist freigeschaltet.':'Geschafft! Du hast alle Level abgeschlossen.'):'Noch nicht geschafft. Für das nächste Level brauchst du mindestens '+PASS+' Punkte. Versuche es mit "Neu starten" nochmal.');
+  $('in').innerHTML=(ok&&lv<3?'<button id="nl">Weiter zu Level '+(lv+1)+'</button>':'')+formsBox(lv,score);
+  if($('nl'))$('nl').onclick=()=>{curLv=lv+1;start();};
+  $('chk').style.display=$('nx').style.display='none';$('sc').textContent='';lvBtns();return;}
+ $('chk').style.display=$('nx').style.display='';
+ $('q').innerHTML='<b>Aufgabe '+(idx+1)+' von '+tasks.length+'</b><br>'+k.q+(k.kind==='dnd'?'<br><span class="mu">Am Handy: erst die Antwort antippen, dann das Feld.</span>':'');
+ if(k.kind==='choice'){$('in').innerHTML=k.opts.map(o=>'<button class="o" data-o="'+o+'">'+o+'</button>').join('<br>');
+  $('in').querySelectorAll('button').forEach(bt=>bt.onclick=()=>{k.sel=bt.dataset.o;$('in').querySelectorAll('button').forEach(x=>x.style.outline='');bt.style.outline='2px solid var(--ac)';});}
+ else if(k.kind==='target')$('in').innerHTML='<div class="sw"><div class="c" style="width:64px;height:64px;border-radius:8px;border:1px solid var(--bd);background:'+css(k.rgb)+'"></div><span class="mu">Zielfarbe (Toleranz ΔE ≤ '+k.tol+')</span></div>';
+ else if(k.kind==='dnd'){k.place=k.pairs.map(()=>null);k.pool=shuf(k.pairs.map(p=>p[1]));rdDnd(k);}
+ else if(k.kind==='order'){k.seq=[];rdOrder(k);}
+ else if(k.kind==='cloze'){$('in').innerHTML='<div style="line-height:2.8;font-size:1.02rem">'+k.parts.map(p=>typeof p==='string'?p:'<select class="gap"><option value="">...</option>'+shuf(p.o).map(o=>'<option>'+o+'</option>').join('')+'</select>').join('')+'</div>';}
+ else{$('in').innerHTML='<input type="number" step="any" id="num">'+(k.calc?'<div style="margin-top:8px"><button class="o" id="calcb">Taschenrechner</button></div><div id="calc" style="display:none"></div>':'');
+  if(k.calc)$('calcb').onclick=()=>{const c=$('calc');if(c.style.display==='none'){c.style.display='';if(!c.innerHTML)buildCalc();}else c.style.display='none';};}
+ k.sel=null;$('sc').textContent='Punkte: '+score;}
+const inEl=$('in');
+inEl.addEventListener('dragstart',e=>{const c=e.target.closest('.chip');if(c)e.dataTransfer.setData('text/plain',c.dataset.a);});
+inEl.addEventListener('dragover',e=>{if(e.target.closest('.drop,.pool'))e.preventDefault();});
+inEl.addEventListener('drop',e=>{const k=tasks[idx];if(!k||k.kind!=='dnd'||done)return;const a=e.dataTransfer.getData('text/plain'),d=e.target.closest('.drop');if(!a)return;e.preventDefault();place(k,a,d?+d.dataset.i:-1);});
+inEl.addEventListener('click',e=>{const k=tasks[idx];if(!k||done)return;
+ if(k.kind==='dnd'){const c=e.target.closest('.chip'),d=e.target.closest('.drop');
+  if(c&&c.parentElement.classList.contains('drop')){place(k,c.dataset.a,-1);return;}
+  if(c){dsel=dsel===c.dataset.a?null:c.dataset.a;rdDnd(k);return;}
+  if(d&&dsel)place(k,dsel,+d.dataset.i);}
+ else if(k.kind==='order'){const b=e.target.closest('button');if(!b)return;
+  if(b.id==='ordr'){k.seq=[];rdOrder(k);}else if(b.dataset.i!==undefined&&!b.disabled){k.seq.push(+b.dataset.i);rdOrder(k);}}});
+$('chk').onclick=()=>{const k=tasks[idx];if(!k||done)return;let ok=false,msg='';
+ if(k.kind==='choice'){if(!k.sel){$('fb').textContent='Bitte eine Antwort wählen.';return;}ok=k.sel===k.ans;msg=ok?'Richtig. ':'Falsch. Richtig ist: '+k.ans+'. ';}
+ else if(k.kind==='target'){const d=dE(cur(),k.tg);ok=d<=k.tol;msg=(ok?'Richtig. ':'Zu weit weg. ')+'ΔE = '+d.toFixed(1)+'. Zielfarbe: '+fmtLab(k.tg)+'. ';}
+ else if(k.kind==='dnd'){if(k.place.some(x=>!x)){$('fb').textContent='Bitte alle Felder belegen.';return;}ok=k.place.every((a,i)=>a===k.pairs[i][1]);msg=ok?'Richtig. ':'Falsch. Richtig wäre: '+k.pairs.map(p=>p[0]+' = '+p[1]).join('; ')+'. ';}
+ else if(k.kind==='order'){if(k.seq.length<k.items.length){$('fb').textContent='Bitte alle Einträge anklicken.';return;}ok=k.seq.every((s,i)=>i===0||k.items[s].v>k.items[k.seq[i-1]].v);msg=ok?'Richtig. ':'Falsch. Richtig wäre: '+k.items.slice().sort((p,q)=>p.v-q.v).map(x=>x.t).join(' | ')+'. ';}
+ else if(k.kind==='cloze'){const sel=[...$('in').querySelectorAll('select')];if(sel.some(s=>!s.value)){$('fb').textContent='Bitte alle Lücken füllen.';return;}const gaps=k.parts.filter(p=>typeof p!=='string');ok=gaps.every((g,i)=>sel[i].value===g.a);msg=ok?'Richtig. ':'Falsch. Richtig wäre: '+gaps.map(g=>g.a).join(', ')+'. ';}
+ else{const v=parseFloat($('num').value.replace(',','.'));if(isNaN(v)){$('fb').textContent='Bitte eine Zahl eingeben.';return;}
+  ok=Math.abs(v-k.ans)<=k.tol;msg=(ok?'Richtig. ':'Falsch. ')+'Ergebnis: '+k.ans+'. ';}
+ done=true;if(ok)score++;$('fb').innerHTML=msg+(k.ex?'<span style="font-weight:400">'+k.ex+'</span>':'');$('fb').className=ok?'ok':'no';$('sc').textContent='Punkte: '+score;};
+$('nx').onclick=()=>{if(!done&&tasks[idx]){$('fb').textContent='Erst prüfen.';return;}idx++;show();};
+$('exb').onclick=()=>{const s=document.querySelector('main>section:nth-child(2)');s.classList.toggle('open');$('exb').textContent=s.classList.contains('open')?'Übungen schließen':'Übungen öffnen';$('exb').classList.toggle('open',s.classList.contains('open'));document.body.classList.toggle('exopen',s.classList.contains('open'));paintLogo();};
+$('unl').onclick=e=>{e.preventDefault();unlocked=3;saveLv();lvBtns();};
+$('rst').onclick=e=>{e.preventDefault();unlocked=1;saveLv();curLv=1;start();};
+$('rs').onclick=start;start();
+const ctl=$('ctl');let hideT=null,inside=false,pressed=false;
+function openBar(){clearTimeout(hideT);ctl.classList.add('show');$('hot').style.display='none';$('grip').style.display='none';}
+function closeBar(force){if(force!==true&&(inside||pressed||ctl.matches(':hover')||ctl.contains(document.activeElement)))return;ctl.classList.remove('show');$('hot').style.display='';$('grip').style.display='';}
+const later=t=>{clearTimeout(hideT);hideT=setTimeout(closeBar,t||700);};
+$('hot').addEventListener('mouseenter',()=>{openBar();later();});
+$('grip').addEventListener('click',openBar);
+ctl.addEventListener('mouseenter',()=>{inside=true;openBar();});
+ctl.addEventListener('mouseleave',()=>{inside=false;later();});
+ctl.addEventListener('pointerdown',()=>{pressed=true;});
+window.addEventListener('pointerup',()=>{if(pressed){pressed=false;later();}});
+ctl.addEventListener('focusout',()=>setTimeout(later,50));
+box.addEventListener('pointerdown',e=>{if(e.pointerType==='touch'){inside=false;pressed=false;if(ctl.contains(document.activeElement))document.activeElement.blur();closeBar(true);}});
+openBar();later(2500);
+</script></body></html>
