@@ -79,6 +79,7 @@ select{font:inherit;padding:4px 6px;border-radius:8px;border:1px solid var(--bd)
 #vol.show{display:block}
 #side{position:fixed;left:10px;top:64px;z-index:6;width:210px;display:flex;flex-direction:column;gap:10px;background:color-mix(in srgb,var(--card) 88%,transparent);border:1px solid var(--bd);border-radius:12px;padding:10px;backdrop-filter:blur(6px)}
 #side .sl{font-weight:600;display:block;margin-bottom:4px}
+#sgrip{display:none;position:fixed;left:0;top:12px;z-index:9;margin:0;padding:8px 12px;border-radius:0 10px 10px 0;background:var(--card);color:var(--tx);border:1px solid var(--bd);border-left:0}
 #side select{width:100%;margin:0}
 #side .tg{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:.9rem}
 #side button{margin:0;width:100%}
@@ -135,7 +136,11 @@ select.gap{font:inherit;font-size:1rem;padding:6px 10px;min-width:130px;margin:2
 header p{display:none}
 main>section:nth-child(2){width:100%}
 #exfoot{width:100%}
-#side{width:170px;top:48px;padding:8px;font-size:.85rem}
+#side{width:170px;top:48px;padding:8px;font-size:.85rem;transform:translateX(-125%);transition:transform .25s ease;z-index:9}
+#side.show{transform:none}
+#sgrip{display:block}
+header{display:none}
+#logo{top:10px;right:8px}
 #vol{left:12px;top:auto;bottom:56px;max-height:40vh}
 }
 </style></head><body>
@@ -143,7 +148,7 @@ main>section:nth-child(2){width:100%}
 <div id="logo"><svg viewBox="0 0 164.646 114.968" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="IV Logo"><path fill="#0b6e97" d="M 131.414062 4.292969 C 137.039062 3.894531 152.167969 4.863281 156.988281 7.265625 C 160.503906 9.023438 161.988281 13.484375 160.183594 17.097656 C 157.886719 21.691406 147.273438 17.363281 143.234375 17.027344 C 117.578125 14.898438 94.558594 24.28125 84.007812 48.691406 L 62.75 107.261719 C 58.648438 111.640625 53.472656 110.742188 51.105469 105.164062 C 43.144531 86.382812 38.054688 65.265625 30.117188 46.324219 C 29.644531 42.679688 29.191406 40.183594 32.570312 38.167969 C 37.6875 35.117188 40.46875 38.429688 42.429688 42.992188 C 46.929688 53.445312 49.863281 65.578125 54.058594 76.269531 C 54.867188 77.851562 56.375 79.476562 58.339844 78.910156 C 60.804688 78.199219 71.09375 46.523438 73.644531 41.320312 C 85.230469 17.707031 105.640625 6.136719 131.414062 4.292969"/><path fill="#0b6e97" d="M 12.617188 37.160156 C 15.359375 36.542969 19.582031 38.601562 19.984375 41.492188 L 19.984375 105.40625 C 17.789062 111.644531 10.105469 111.582031 7.953125 105.40625 L 7.972656 42.507812 C 8.449219 40.003906 10.054688 37.738281 12.617188 37.160156"/><path fill="#0b6e97" d="M 21.042969 23.058594 C 21.042969 26.964844 17.875 30.128906 13.96875 30.128906 C 10.066406 30.128906 6.898438 26.964844 6.898438 23.058594 C 6.898438 19.152344 10.066406 15.984375 13.96875 15.984375 C 17.875 15.984375 21.042969 19.152344 21.042969 23.058594"/></svg></div>
 <div id="exfoot"></div>
 <button id="exb">Übungen öffnen</button>
-<div id="hot"></div><button id="grip">▲ Regler</button>
+<div id="hot"></div><button id="grip">▲ Regler</button><button id="sgrip">☰ Menü</button>
 <div id="side">
 <div><span class="sl">Farbraum:</span><select id="mode"><option value="srgb">sRGB</option><option value="cmyk">CMYK</option><option value="both" selected>Beide</option></select></div>
 <div class="tg"><span>Sichtbarer Bereich (Lab)</span><label class="sw2"><input type="checkbox" id="visb" checked><span class="knob"></span></label></div>
@@ -193,7 +198,7 @@ main>section:nth-child(2){width:100%}
 <p class="mu">Faustregeln, je nach Norm und Anwendung verschieden. Werte von ΔE76 und ΔE00 nicht vermischen.</p>
 <p><b>Merksatz:</b> ΔE76 ist der geometrische Abstand im Lab Raum. ΔE00 ist ein Abstand, der mit Seh Experimenten an die Wahrnehmung angepasst wurde.</p>
 </div></details>
-<p class="mu" style="font-size:.78rem;margin:2px 0"><a href="#" id="unl">Alle Level freischalten (Lehrkraft)</a> | <a href="#" id="rst">Fortschritt zurücksetzen</a></p>
+<p class="mu" style="font-size:.78rem;margin:2px 0"><a href="#" id="unl">Alle Level freischalten (Lehrkraft)</a> | <a href="#" id="rst">Fortschritt zurücksetzen</a><span id="pinbox" style="display:none;margin-left:8px"><input type="password" inputmode="numeric" maxlength="4" id="pin" placeholder="PIN" style="width:70px;padding:3px 6px;border:1px solid var(--bd);border-radius:6px;background:var(--bg);color:var(--tx)"> <button class="o" id="pinok" style="padding:3px 10px;margin:0">OK</button> <span id="pinmsg" class="no"></span></span></p>
 </section>
 </main>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -376,7 +381,7 @@ $('volb').onclick=()=>{const v=$('vol');v.className='card show';v.textContent='B
   v.innerHTML='<b>Volumen im Lab Raum (Einheit: ΔE³)</b><br>sRGB: ca. '+fm(vs)+'<br>CMYK (FOGRA39, Näherung): ca. '+fm(vc)+'<br>CMYK entspricht ca. '+Math.round(vc/vs*100)+' % von sRGB<br><p style="margin:8px 0 4px"><b>Warum Volumen?</b> Die Zahl der Werte (z. B. 16,7 Mio. bei 8 Bit RGB) hängt nur von der Bittiefe ab und sagt nichts über die Größe eines Farbraums. Lab ist so aufgebaut, dass gleiche Abstände ungefähr gleich großen Farbunterschieden entsprechen: ΔE von 1 bis 2 ist etwa der kleinste Unterschied, den das Auge wahrnimmt. Das Volumen in ΔE³ zeigt daher grob, wie viel Platz ein Farbraum im Wahrnehmungsraum einnimmt, also wie viele unterscheidbare Farben er enthält. So lassen sich sRGB und CMYK fair vergleichen.</p><p style="margin:4px 0"><b>Grenzen:</b> Lab ist nur näherungsweise gleichabständig. Das Volumen sagt außerdem nicht, welche Farben fehlen: Cyan liegt z. B. in CMYK außerhalb von sRGB, obwohl sRGB insgesamt größer ist.</p><span class="mu">Richtwert (Rasterverfahren). <a href="#" id="vx">schließen</a></span>';
   $('vx').onclick=e=>{e.preventDefault();v.className='card';};},30);};
 function size(){const w=box.clientWidth,h=box.clientHeight;ren.setSize(w,h);cam.aspect=w/h;cam.updateProjectionMatrix();}
-window.addEventListener('resize',size);size();
+window.addEventListener('resize',size);size();if(window.ResizeObserver)new ResizeObserver(size).observe(box);if(window.visualViewport)window.visualViewport.addEventListener('resize',size);
 let drag=null;
 let pan=false,pmode=false;box.oncontextmenu=e=>e.preventDefault();
 $('pm').onchange=()=>{pmode=$('pm').checked;};
@@ -588,7 +593,12 @@ $('chk').onclick=()=>{const k=tasks[idx];if(!k||done)return;let ok=false,msg='';
  done=true;if(ok)score++;$('fb').innerHTML=msg+(k.ex?'<span style="font-weight:400">'+k.ex+'</span>':'');$('fb').className=ok?'ok':'no';$('sc').textContent='Punkte: '+score;};
 $('nx').onclick=()=>{if(!done&&tasks[idx]){$('fb').textContent='Erst prüfen.';return;}idx++;show();};
 $('exb').onclick=()=>{const s=document.querySelector('main>section:nth-child(2)');s.classList.toggle('open');$('exb').textContent=s.classList.contains('open')?'Übungen schließen':'Übungen öffnen';$('exb').classList.toggle('open',s.classList.contains('open'));document.body.classList.toggle('exopen',s.classList.contains('open'));paintLogo();};
-$('unl').onclick=e=>{e.preventDefault();unlocked=3;saveLv();lvBtns();};
+const PIN_SALT='cielab-IV-2026',PIN_HASH='e3b5365e472c319722679f8c95e8b2cb8a4eea7f9dff4169605ab8cd43a2c2e3';
+async function sha(t){const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(t));return[...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join('');}
+async function tryPin(){const p=$('pin').value;let h='';try{h=await sha(PIN_SALT+p);}catch(err){$('pinmsg').textContent='Nicht möglich';return;}
+ if(h===PIN_HASH){unlocked=3;saveLv();lvBtns();$('pinbox').style.display='none';$('pin').value='';$('pinmsg').textContent='';}else{$('pinmsg').textContent='PIN falsch';$('pin').value='';}}
+$('unl').onclick=e=>{e.preventDefault();$('pinbox').style.display='inline';$('pin').focus();};
+$('pinok').onclick=tryPin;$('pin').addEventListener('keydown',e=>{if(e.key==='Enter')tryPin();});
 $('rst').onclick=e=>{e.preventDefault();unlocked=1;saveLv();curLv=1;start();};
 $('rs').onclick=start;start();
 const ctl=$('ctl');let hideT=null,inside=false,pressed=false;
@@ -604,4 +614,8 @@ window.addEventListener('pointerup',()=>{if(pressed){pressed=false;later();}});
 ctl.addEventListener('focusout',()=>setTimeout(later,50));
 box.addEventListener('pointerdown',e=>{if(e.pointerType==='touch'){inside=false;pressed=false;if(ctl.contains(document.activeElement))document.activeElement.blur();closeBar(true);}});
 openBar();later(2500);
+function openSide(){$('side').classList.add('show');$('sgrip').style.display='none';}
+function closeSide(){$('side').classList.remove('show');$('sgrip').style.display='';}
+$('sgrip').addEventListener('click',openSide);
+box.addEventListener('pointerdown',()=>{if(window.matchMedia('(max-width:900px)').matches)closeSide();});
 </script></body></html>
